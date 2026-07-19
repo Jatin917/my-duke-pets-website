@@ -6,7 +6,11 @@ import { useCustomerAuth } from '../../context/CustomerAuthContext';
 
 const PetFAQ = ({ pet }) => {
   const { isAuthenticated } = useCustomerAuth();
-  const faqs = buildPetFAQs(pet, { showPrice: isAuthenticated });
+  const customFaqs =
+    Array.isArray(pet.faqs) && pet.faqs.length > 0
+      ? pet.faqs.map((f) => ({ q: f.question || f.q, a: f.answer || f.a })).filter((f) => f.q)
+      : null;
+  const faqs = customFaqs || buildPetFAQs(pet, { showPrice: isAuthenticated });
   const [openIndex, setOpenIndex] = useState(0);
 
   return (
@@ -16,7 +20,7 @@ const PetFAQ = ({ pet }) => {
 
       <div className="space-y-3">
         {faqs.map((item, i) => (
-          <div key={item.q} className="border border-gray-100 rounded-xl overflow-hidden">
+          <div key={`${item.q}-${i}`} className="border border-gray-100 rounded-xl overflow-hidden">
             <button
               onClick={() => setOpenIndex(openIndex === i ? -1 : i)}
               className="w-full flex items-center justify-between gap-4 p-4 text-left"

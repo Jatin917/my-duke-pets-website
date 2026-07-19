@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { FiArrowLeft, FiSave } from 'react-icons/fi';
+import { FiArrowLeft, FiPlus, FiSave, FiTrash2 } from 'react-icons/fi';
 import Loader from '../components/common/Loader';
 import ImageUploader from '../components/common/ImageUploader';
 import { fetchPetById, createPet, updatePet } from '../services/petService';
@@ -12,6 +12,113 @@ const inputClass =
   'w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 focus:outline-none text-sm transition';
 const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5';
 const errorClass = 'text-red-500 text-xs mt-1';
+
+const DEFAULT_CARE_TIPS = [
+  { title: 'Diet', text: 'Feed age-appropriate, high-quality food suited to the pet’s size and breed.' },
+  { title: 'Exercise & Enrichment', text: 'Daily activity and playtime that suits your home and the pet’s temperament.' },
+  { title: 'Grooming', text: 'Regular grooming and coat/skin checks keep them comfortable and healthy.' },
+  { title: 'Health', text: 'Keep vaccination and deworming on schedule and book regular vet check-ups.' },
+];
+
+const DEFAULT_DIET = [
+  { title: 'High-Quality Food', text: 'Protein-rich food formulated for your pet’s age and breed size.' },
+  { title: 'Fresh Water', text: 'Always keep clean, fresh water available throughout the day.' },
+  { title: 'Fruits & Vegetables', text: 'Vet-approved fruits and vegetables provide essential fiber and vitamins.' },
+  { title: 'Supplements', text: 'Omega-3 and joint supplements (as advised by your vet) support coat and joints.' },
+];
+
+const DEFAULT_AVOID = [
+  { title: 'Chocolate & Caffeine', text: 'Contains compounds that are highly toxic to most pets.' },
+  { title: 'Onions & Garlic', text: 'Can damage red blood cells and lead to anemia.' },
+  { title: 'Grapes & Raisins', text: 'Known to cause sudden kidney issues in dogs.' },
+  { title: 'Xylitol & Sugary Foods', text: 'Artificial sweeteners can cause serious liver problems.' },
+];
+
+const DEFAULT_FAQS = [
+  {
+    question: 'How much does this pet cost?',
+    answer: 'Pricing is visible after login. Final price is confirmed during enquiry follow-up.',
+  },
+  {
+    question: 'Is this pet vaccinated and healthy?',
+    answer: 'Vaccination and health status are shown on this page. Full records are shared at handover.',
+  },
+  {
+    question: 'Do you provide home delivery?',
+    answer: 'Yes, safe doorstep delivery is available in most cities within the estimate shown in Quick Facts.',
+  },
+  {
+    question: 'What is your health guarantee policy?',
+    answer: 'Every pet is vet-checked before dispatch and backed by our post-adoption support team.',
+  },
+];
+
+const TitleTextList = ({ title, hint, items, onChange, keyA = 'title', keyB = 'text', labelA = 'Title', labelB = 'Text' }) => {
+  const updateItem = (index, field, value) => {
+    const next = items.map((item, i) => (i === index ? { ...item, [field]: value } : item));
+    onChange(next);
+  };
+
+  const addItem = () => onChange([...items, { [keyA]: '', [keyB]: '' }]);
+  const removeItem = (index) => onChange(items.filter((_, i) => i !== index));
+
+  return (
+    <div className="bg-white rounded-2xl shadow-soft p-6 space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-gray-800">{title}</h3>
+          {hint && <p className="text-xs text-gray-400 mt-1">{hint}</p>}
+        </div>
+        <button
+          type="button"
+          onClick={addItem}
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary-600 hover:text-primary-700"
+        >
+          <FiPlus size={14} /> Add
+        </button>
+      </div>
+
+      {items.length === 0 && (
+        <p className="text-sm text-gray-400 italic">No items yet — site defaults will be shown on the detail page.</p>
+      )}
+
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <div key={index} className="rounded-xl border border-gray-100 bg-gray-50/60 p-4 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">#{index + 1}</span>
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="text-red-400 hover:text-red-600 p-1"
+                title="Remove"
+              >
+                <FiTrash2 size={14} />
+              </button>
+            </div>
+            <div>
+              <label className={labelClass}>{labelA}</label>
+              <input
+                className={inputClass}
+                value={item[keyA] || ''}
+                onChange={(e) => updateItem(index, keyA, e.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass}>{labelB}</label>
+              <textarea
+                rows={2}
+                className={inputClass}
+                value={item[keyB] || ''}
+                onChange={(e) => updateItem(index, keyB, e.target.value)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const PetForm = () => {
   const { id } = useParams();
@@ -23,6 +130,10 @@ const PetForm = () => {
   const [existingImages, setExistingImages] = useState([]);
   const [removedImages, setRemovedImages] = useState([]);
   const [newFiles, setNewFiles] = useState([]);
+  const [careTips, setCareTips] = useState([]);
+  const [faqs, setFaqs] = useState([]);
+  const [recommendedDiet, setRecommendedDiet] = useState([]);
+  const [foodsToAvoid, setFoodsToAvoid] = useState([]);
 
   const {
     register,
@@ -61,8 +172,27 @@ const PetForm = () => {
           seoTitle: pet.seoTitle,
           seoDescription: pet.seoDescription,
           videoUrl: pet.videoUrl || '',
+          size: pet.size || '',
+          lifespan: pet.lifespan || '',
+          deliveryEstimate: pet.deliveryEstimate || '',
         });
         setExistingImages(pet.images || []);
+        setCareTips(pet.careTips?.length ? pet.careTips.map((t) => ({ title: t.title || '', text: t.text || '' })) : []);
+        setFaqs(
+          pet.faqs?.length
+            ? pet.faqs.map((f) => ({ question: f.question || '', answer: f.answer || '' }))
+            : []
+        );
+        setRecommendedDiet(
+          pet.recommendedDiet?.length
+            ? pet.recommendedDiet.map((t) => ({ title: t.title || '', text: t.text || '' }))
+            : []
+        );
+        setFoodsToAvoid(
+          pet.foodsToAvoid?.length
+            ? pet.foodsToAvoid.map((t) => ({ title: t.title || '', text: t.text || '' }))
+            : []
+        );
       })
       .catch(() => toast.error('Failed to load pet'))
       .finally(() => setLoading(false));
@@ -75,6 +205,10 @@ const PetForm = () => {
       Object.entries(data).forEach(([key, value]) => {
         if (value !== undefined && value !== null) formData.append(key, value);
       });
+      formData.append('careTips', JSON.stringify(careTips));
+      formData.append('faqs', JSON.stringify(faqs));
+      formData.append('recommendedDiet', JSON.stringify(recommendedDiet));
+      formData.append('foodsToAvoid', JSON.stringify(foodsToAvoid));
       removedImages.forEach((img) => formData.append('removedImages', img));
       newFiles.forEach((file) => formData.append('images', file));
 
@@ -103,7 +237,9 @@ const PetForm = () => {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-gray-800">{isEdit ? 'Edit Pet' : 'Add New Pet'}</h1>
-          <p className="text-gray-500 text-sm">Fill in the details below</p>
+          <p className="text-gray-500 text-sm">
+            Edit listing + detail page content (FAQs, tips, diet). Trust badges stay site-wide.
+          </p>
         </div>
       </div>
 
@@ -257,6 +393,103 @@ const PetForm = () => {
             <label className={labelClass}>Additional Notes</label>
             <textarea rows={3} className={inputClass} {...register('additionalNotes')} />
           </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-soft p-6 grid grid-cols-1 sm:grid-cols-3 gap-5">
+          <div className="sm:col-span-3 flex items-start justify-between gap-3">
+            <div>
+              <h3 className="font-bold text-gray-800">Quick Facts extras</h3>
+              <p className="text-xs text-gray-400 mt-1">
+                Breed, gender, age, color, and vaccination come from Basic Info. Leave blank to use category defaults.
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <label className={labelClass}>Size</label>
+            <input placeholder="e.g. Medium - Large" className={inputClass} {...register('size')} />
+          </div>
+          <div>
+            <label className={labelClass}>Lifespan</label>
+            <input placeholder="e.g. 10-14 Years" className={inputClass} {...register('lifespan')} />
+          </div>
+          <div>
+            <label className={labelClass}>Delivery estimate</label>
+            <input placeholder="e.g. 3-5 Days" className={inputClass} {...register('deliveryEstimate')} />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-end mb-2">
+            <button
+              type="button"
+              onClick={() => setCareTips(DEFAULT_CARE_TIPS.map((t) => ({ ...t })))}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700"
+            >
+              Fill care tip defaults
+            </button>
+          </div>
+          <TitleTextList
+            title="Care Tips"
+            hint="Shown under “Care Tips for {name}” on the detail page."
+            items={careTips}
+            onChange={setCareTips}
+          />
+        </div>
+
+        <div>
+          <div className="flex justify-end gap-3 mb-2">
+            <button
+              type="button"
+              onClick={() => setRecommendedDiet(DEFAULT_DIET.map((t) => ({ ...t })))}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700"
+            >
+              Fill recommended diet defaults
+            </button>
+            <button
+              type="button"
+              onClick={() => setFoodsToAvoid(DEFAULT_AVOID.map((t) => ({ ...t })))}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700"
+            >
+              Fill foods-to-avoid defaults
+            </button>
+          </div>
+          <div className="space-y-6">
+            <TitleTextList
+              title="Recommended Diet"
+              hint="Left column on the detail page diet section."
+              items={recommendedDiet}
+              onChange={setRecommendedDiet}
+            />
+            <TitleTextList
+              title="Foods to Avoid"
+              hint="Right column on the detail page diet section."
+              items={foodsToAvoid}
+              onChange={setFoodsToAvoid}
+            />
+          </div>
+        </div>
+
+        <div>
+          <div className="flex justify-end mb-2">
+            <button
+              type="button"
+              onClick={() => setFaqs(DEFAULT_FAQS.map((f) => ({ ...f })))}
+              className="text-xs font-medium text-primary-600 hover:text-primary-700"
+            >
+              Fill FAQ defaults
+            </button>
+          </div>
+          <TitleTextList
+            title="FAQs"
+            hint="Custom FAQs replace the auto-generated ones when at least one is saved."
+            items={faqs}
+            onChange={setFaqs}
+            keyA="question"
+            keyB="answer"
+            labelA="Question"
+            labelB="Answer"
+          />
         </div>
 
         <div className="bg-white rounded-2xl shadow-soft p-6 grid grid-cols-1 sm:grid-cols-2 gap-5">

@@ -35,10 +35,10 @@ const PetQuickFacts = ({ pet }) => {
     { icon: FiUser, label: 'Gender', value: pet.gender },
     { icon: FiClock, label: 'Age', value: pet.age },
     { icon: FiDroplet, label: 'Color', value: pet.color || '-' },
-    { icon: FiFeather, label: 'Size', value: getSize(pet.category?.name) },
-    { icon: FiHeart, label: 'Lifespan', value: getLifespan(pet.category?.name) },
+    { icon: FiFeather, label: 'Size', value: pet.size || getSize(pet.category?.name) },
+    { icon: FiHeart, label: 'Lifespan', value: pet.lifespan || getLifespan(pet.category?.name) },
     { icon: FiShield, label: 'Vaccination', value: pet.vaccinationStatus },
-    { icon: FiTruck, label: 'Delivery', value: getDeliveryEstimate() },
+    { icon: FiTruck, label: 'Delivery', value: pet.deliveryEstimate || getDeliveryEstimate() },
   ];
 
   return (

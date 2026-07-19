@@ -14,7 +14,6 @@ const mapImages = (files = []) => files.map((f) => `/uploads/sell/${f.filename}`
 // @route   POST /api/sell
 // @access  Public
 export const createSellRequest = asyncHandler(async (req, res) => {
-  const mode = req.body.mode === 'listed' ? 'listed' : 'custom';
   const images = mapImages(req.files);
 
   if (!images.length) {
@@ -28,6 +27,8 @@ export const createSellRequest = asyncHandler(async (req, res) => {
   const name = (req.body.name || '').trim();
   const age = (req.body.age || '').trim();
   const price = Number(req.body.price);
+  const categoryValue = (req.body.category || '').trim();
+  const isOtherCategory = categoryValue === 'other' || categoryValue === '__other__';
 
   if (!sellerName || !sellerPhone || !sellerEmail || !name || !age) {
     res.status(400);
@@ -42,44 +43,45 @@ export const createSellRequest = asyncHandler(async (req, res) => {
     throw new Error('Please provide a valid price');
   }
 
-  let category = req.body.category || null;
+  let category = null;
+  let customCategory = '';
   let breed = (req.body.breed || '').trim();
-  let referencePet = null;
+  let customBreed = false;
+  let mode = 'catalog';
 
-  if (mode === 'listed') {
-    if (!req.body.referencePet) {
+  if (isOtherCategory) {
+    mode = 'other';
+    customBreed = true;
+    customCategory = (req.body.customCategory || '').trim() || 'Other';
+    if (!breed) {
       res.status(400);
-      throw new Error('Please select a listed pet to base your sale on');
+      throw new Error('Please enter the breed');
     }
-    referencePet = await Pet.findById(req.body.referencePet).populate('category', 'name');
-    if (!referencePet) {
-      res.status(404);
-      throw new Error('Selected listed pet not found');
-    }
-    category = referencePet.category?._id || referencePet.category;
-    breed = referencePet.breed;
   } else {
-    if (!category) {
+    if (!categoryValue) {
       res.status(400);
       throw new Error('Please select a category');
     }
-    const cat = await Category.findById(category);
+    const cat = await Category.findById(categoryValue);
     if (!cat) {
       res.status(400);
       throw new Error('Invalid category');
     }
+    category = cat._id;
+
     if (!breed) {
       res.status(400);
-      throw new Error('Please enter the breed');
+      throw new Error('Please select a breed');
     }
   }
 
   const request = await SellRequest.create({
     mode,
-    referencePet: referencePet?._id || null,
     category,
+    customCategory,
     name,
     breed,
+    customBreed,
     age,
     gender: req.body.gender || 'Unknown',
     color: (req.body.color || '').trim(),
@@ -188,7 +190,9 @@ export const updateSellRequest = asyncHandler(async (req, res) => {
     if (!request.publishedPet) {
       if (!request.category) {
         res.status(400);
-        throw new Error('Cannot publish — category is missing');
+        throw new Error(
+          'Cannot publish yet — this request used "Other" category. Assign a real category first or create the pet manually.'
+        );
       }
       const pet = await Pet.create({
         name: request.name,

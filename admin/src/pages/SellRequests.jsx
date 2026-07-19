@@ -43,10 +43,10 @@ const DetailModal = ({ item, onClose, onPublish }) => (
       </div>
       <div className="space-y-2 text-sm">
         {[
-          ['Mode', item.mode === 'listed' ? 'Listed type' : 'Custom'],
+          ['Mode', item.mode === 'other' ? 'Other (custom breed)' : 'Catalog'],
           ['Pet', item.name],
           ['Breed', item.breed || '-'],
-          ['Category', item.category?.name || '-'],
+          ['Category', item.category?.name || item.customCategory || '-'],
           ['Age', item.age],
           ['Gender', item.gender],
           ['Price', `₹${item.price}`],
@@ -212,7 +212,9 @@ const SellRequests = () => {
                       />
                       <div>
                         <p className="font-medium text-gray-800">{item.name}</p>
-                        <p className="text-xs text-gray-400">{item.breed || item.category?.name}</p>
+                        <p className="text-xs text-gray-400">
+                          {item.breed || '-'} · {item.category?.name || item.customCategory || 'Other'}
+                        </p>
                       </div>
                     </div>
                   </td>

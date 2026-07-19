@@ -30,6 +30,34 @@ const petSchema = new mongoose.Schema(
     views: { type: Number, default: 0 },
     seoTitle: { type: String, trim: true, default: '' },
     seoDescription: { type: String, trim: true, default: '' },
+    // Detail-page content (admin-editable). Empty = client uses built-in defaults.
+    size: { type: String, trim: true, default: '' },
+    lifespan: { type: String, trim: true, default: '' },
+    deliveryEstimate: { type: String, trim: true, default: '' },
+    careTips: [
+      {
+        title: { type: String, trim: true, default: '' },
+        text: { type: String, trim: true, default: '' },
+      },
+    ],
+    faqs: [
+      {
+        question: { type: String, trim: true, default: '' },
+        answer: { type: String, trim: true, default: '' },
+      },
+    ],
+    recommendedDiet: [
+      {
+        title: { type: String, trim: true, default: '' },
+        text: { type: String, trim: true, default: '' },
+      },
+    ],
+    foodsToAvoid: [
+      {
+        title: { type: String, trim: true, default: '' },
+        text: { type: String, trim: true, default: '' },
+      },
+    ],
   },
   { timestamps: true }
 );

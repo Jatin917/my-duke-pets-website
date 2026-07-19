@@ -2,12 +2,13 @@ import mongoose from 'mongoose';
 
 const sellRequestSchema = new mongoose.Schema(
   {
-    mode: { type: String, enum: ['listed', 'custom'], required: true },
-    // When mode=listed — borrow category/breed from an existing pet
+    mode: { type: String, enum: ['catalog', 'other'], default: 'catalog' },
     referencePet: { type: mongoose.Schema.Types.ObjectId, ref: 'Pet', default: null },
     category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', default: null },
+    customCategory: { type: String, trim: true, default: '' },
     name: { type: String, trim: true, required: true },
     breed: { type: String, trim: true, default: '' },
+    customBreed: { type: Boolean, default: false },
     age: { type: String, trim: true, required: true },
     gender: { type: String, enum: ['Male', 'Female', 'Unknown'], default: 'Unknown' },
     color: { type: String, trim: true, default: '' },

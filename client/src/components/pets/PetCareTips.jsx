@@ -3,7 +3,8 @@ import { FiCheckCircle } from 'react-icons/fi';
 import { getCareTips } from '../../utils/petMeta';
 
 const PetCareTips = ({ pet }) => {
-  const tips = getCareTips(pet);
+  const tips =
+    Array.isArray(pet.careTips) && pet.careTips.length > 0 ? pet.careTips : getCareTips(pet);
 
   return (
     <div className="bg-white rounded-2xl shadow-soft p-6">
@@ -14,7 +15,7 @@ const PetCareTips = ({ pet }) => {
       <div className="space-y-4">
         {tips.map((tip, i) => (
           <motion.div
-            key={tip.title}
+            key={`${tip.title}-${i}`}
             initial={{ opacity: 0, x: -10 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}

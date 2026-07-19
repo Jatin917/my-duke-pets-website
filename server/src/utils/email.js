@@ -238,7 +238,7 @@ export const sendSellRequestConfirmationEmail = async ({ request }) =>
       `
       <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${request.sellerName}, thanks for listing <strong>${request.name}</strong> with ${SITE_NAME}. Our team will review your request shortly.</p>
       <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#9ca3af;">Mode</td><td style="padding:6px 0;">${request.mode === 'listed' ? 'Based on listed pet' : 'Custom listing'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Mode</td><td style="padding:6px 0;">${request.mode === 'other' ? 'Other (custom breed)' : 'Catalog category'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Pet</td><td style="padding:6px 0;">${request.name} (${request.breed || '-'})</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Price</td><td style="padding:6px 0;">₹${request.price}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Status</td><td style="padding:6px 0;">${request.status}</td></tr>

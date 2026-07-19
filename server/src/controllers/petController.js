@@ -6,6 +6,51 @@ import Category from '../models/Category.js';
 
 const toPublicPath = (filename) => `/uploads/pets/${filename}`;
 
+const TITLE_TEXT_KEYS = ['careTips', 'faqs', 'recommendedDiet', 'foodsToAvoid'];
+
+const parseJsonArray = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  if (Array.isArray(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
+const normalizeTitleTextItems = (items, { questionMode = false } = {}) => {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (questionMode) {
+        const question = String(item.question || item.q || '').trim();
+        const answer = String(item.answer || item.a || '').trim();
+        return question || answer ? { question, answer } : null;
+      }
+      const title = String(item.title || '').trim();
+      const text = String(item.text || '').trim();
+      return title || text ? { title, text } : null;
+    })
+    .filter(Boolean);
+};
+
+const applyDetailContent = (target, body) => {
+  ['size', 'lifespan', 'deliveryEstimate'].forEach((field) => {
+    if (body[field] !== undefined) target[field] = body[field];
+  });
+
+  TITLE_TEXT_KEYS.forEach((key) => {
+    if (body[key] === undefined) return;
+    const parsed = parseJsonArray(body[key]);
+    if (parsed === null) return;
+    target[key] = normalizeTitleTextItems(parsed, { questionMode: key === 'faqs' });
+  });
+};
+
 const SORT_OPTIONS = {
   newest: { createdAt: -1 },
   oldest: { createdAt: 1 },
@@ -145,12 +190,20 @@ export const getPet = asyncHandler(async (req, res) => {
 export const createPet = asyncHandler(async (req, res) => {
   const images = (req.files || []).map((f) => toPublicPath(f.filename));
 
-  const pet = await Pet.create({
+  const payload = {
     ...req.body,
     availability: req.body.availability === 'false' ? false : true,
     featured: req.body.featured === 'true' || req.body.featured === true,
     images,
+  };
+
+  // Strip raw JSON fields then normalize via helper
+  TITLE_TEXT_KEYS.forEach((key) => {
+    delete payload[key];
   });
+  applyDetailContent(payload, req.body);
+
+  const pet = await Pet.create(payload);
 
   res.status(201).json({ success: true, data: pet });
 });
@@ -190,6 +243,8 @@ export const updatePet = asyncHandler(async (req, res) => {
   fields.forEach((field) => {
     if (req.body[field] !== undefined) pet[field] = req.body[field];
   });
+
+  applyDetailContent(pet, req.body);
 
   if (req.body.availability !== undefined) {
     pet.availability = req.body.availability === 'true' || req.body.availability === true;

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiSearch } from 'react-icons/fi';
+import { HOME_HERO_VIDEO } from '../../utils/constants';
 
 const stats = [
   { value: '2,500+', label: 'Happy Pets' },
@@ -19,39 +20,51 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative overflow-hidden bg-gradient-hero pt-32 pb-24 sm:pt-40 sm:pb-32">
-      <div className="absolute inset-0 opacity-20">
-        <div className="absolute -top-20 -left-20 w-96 h-96 bg-primary-500 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary-500 rounded-full blur-3xl" />
+    <section className="relative overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32">
+      {/* Background video */}
+      <div className="absolute inset-0">
+        <video
+          className="h-full w-full object-cover"
+          src={HOME_HERO_VIDEO}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="metadata"
+        />
+        {/* Readability overlays — keep headline / search readable over footage */}
+        <div className="absolute inset-0 bg-[#1a1528]/72" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-900/35 via-transparent to-secondary-900/25" />
       </div>
 
       <motion.div
         animate={{ y: [0, -18, 0] }}
         transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-        className="hidden lg:block absolute top-32 right-16 text-6xl opacity-80"
+        className="hidden lg:block absolute top-32 right-16 text-6xl opacity-80 z-10"
       >
         🐶
       </motion.div>
       <motion.div
         animate={{ y: [0, 16, 0] }}
         transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-        className="hidden lg:block absolute bottom-24 left-16 text-5xl opacity-80"
+        className="hidden lg:block absolute bottom-24 left-16 text-5xl opacity-80 z-10"
       >
         🐱
       </motion.div>
       <motion.div
         animate={{ y: [0, -12, 0] }}
         transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-        className="hidden lg:block absolute top-1/2 left-1/4 text-4xl opacity-70"
+        className="hidden lg:block absolute top-1/2 left-1/4 text-4xl opacity-70 z-10"
       >
         🦜
       </motion.div>
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-block bg-white/10 text-white/90 text-sm font-medium px-4 py-1.5 rounded-full mb-6 border border-white/20"
+          className="inline-block bg-white/10 text-white/90 text-sm font-medium px-4 py-1.5 rounded-full mb-6 border border-white/20 backdrop-blur-sm"
         >
           🐾 Trusted by 4,800+ pet parents across India
         </motion.span>
@@ -62,14 +75,18 @@ const Hero = () => {
           transition={{ delay: 0.1 }}
           className="font-display text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6"
         >
-          Find Your Perfect <span className="text-gradient bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">Furry Friend</span> Today
+          Find Your Perfect{' '}
+          <span className="text-gradient bg-gradient-to-r from-primary-300 to-primary-500 bg-clip-text text-transparent">
+            Furry Friend
+          </span>{' '}
+          Today
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="text-white/80 text-base sm:text-lg max-w-2xl mx-auto mb-10"
+          className="text-white/85 text-base sm:text-lg max-w-2xl mx-auto mb-10"
         >
           Browse verified, healthy & vaccinated pets from trusted breeders. Dogs, cats, birds,
           rabbits and more — your new best friend is just a click away.
