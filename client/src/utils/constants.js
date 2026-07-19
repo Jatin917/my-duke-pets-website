@@ -19,11 +19,6 @@ export const GENDER_OPTIONS = ['Male', 'Female', 'Unknown'];
 
 export const WISHLIST_KEY = 'petnest_wishlist';
 
-/** Login page left-panel hero video (replace with your own MP4 anytime). */
-export const LOGIN_HERO_VIDEO =
-  import.meta.env.VITE_LOGIN_HERO_VIDEO ||
-  'https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4';
-
 /** Home page hero background video (replace with your own MP4 anytime). */
 export const HOME_HERO_VIDEO =
   import.meta.env.VITE_HOME_HERO_VIDEO ||
