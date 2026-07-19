@@ -1,0 +1,12 @@
+node_modules/
+.env
+uploads/*
+!uploads/pets/
+!uploads/categories/
+uploads/pets/*
+uploads/categories/*
+!uploads/pets/.gitkeep
+!uploads/categories/.gitkeep
+exports/*.xlsx
+npm-debug.log*
+.DS_Store
