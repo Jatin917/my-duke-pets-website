@@ -6,8 +6,7 @@ import { FiMail, FiPhone, FiArrowLeft, FiUser, FiCheck } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import BrandLogo from '../components/common/BrandLogo';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
-import { SITE_NAME, SITE_TAGLINE } from '../utils/constants';
-import loginHeroVideo from '../assets/video.mp4';
+import { LOGIN_HERO_VIDEO, SITE_NAME, SITE_TAGLINE } from '../utils/constants';
 
 const PET_THOUGHTS = [
   {

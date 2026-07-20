@@ -19,7 +19,16 @@ export const GENDER_OPTIONS = ['Male', 'Female', 'Unknown'];
 
 export const WISHLIST_KEY = 'petnest_wishlist';
 
-/** Home page hero background video (demo stock clip). */
+/** Google Drive direct file URL for HTML5 <video src>. Files must be shared “Anyone with the link”. */
+const driveVideoUrl = (fileId) =>
+  `https://drive.google.com/uc?export=download&id=${fileId}`;
+
+/** Login page left-panel video (Google Drive). */
+export const LOGIN_HERO_VIDEO =
+  import.meta.env.VITE_LOGIN_HERO_VIDEO ||
+  driveVideoUrl('1oDJy7zE3p_kkUmSfKdGFvriCIy4byTyS');
+
+/** Home page hero background video (Google Drive). */
 export const HOME_HERO_VIDEO =
   import.meta.env.VITE_HOME_HERO_VIDEO ||
-  'https://videos.pexels.com/video-files/3195394/3195394-uhd_2560_1440_25fps.mp4';
+  driveVideoUrl('1FEiqhy79nsKlGsLVUjcpqLgLRdfdAzTi');
