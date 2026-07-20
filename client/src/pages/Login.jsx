@@ -202,9 +202,9 @@ const Login = () => {
             {/* Video panel */}
             <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 aspect-[16/10] max-h-[320px] w-full bg-black/40">
               <video
-                key={loginHeroVideo}
+                key={LOGIN_HERO_VIDEO}
                 className="h-full w-full object-cover"
-                src={loginHeroVideo}
+                src={LOGIN_HERO_VIDEO}
                 autoPlay
                 muted
                 loop
