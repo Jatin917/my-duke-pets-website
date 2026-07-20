@@ -6,6 +6,7 @@ import BrandLogo from '../common/BrandLogo';
 import { useWishlist } from '../../context/WishlistContext';
 import { useCompare } from '../../context/CompareContext';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -24,6 +25,7 @@ const Navbar = () => {
   const { wishlist } = useWishlist();
   const { compareList } = useCompare();
   const { isAuthenticated, customer } = useCustomerAuth();
+  useBodyScrollLock(open);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);

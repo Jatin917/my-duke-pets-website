@@ -47,9 +47,9 @@ export default {
       },
       keyframes: {
         pulseRing: {
-          '0%': { transform: 'scale(0.9)', opacity: '0.7' },
-          '70%': { transform: 'scale(1.6)', opacity: '0' },
-          '100%': { transform: 'scale(0.9)', opacity: '0' },
+          '0%': { transform: 'scale(0.95)', opacity: '0.65' },
+          '70%': { transform: 'scale(1.35)', opacity: '0' },
+          '100%': { transform: 'scale(0.95)', opacity: '0' },
         },
         floatY: {
           '0%, 100%': { transform: 'translateY(0)' },

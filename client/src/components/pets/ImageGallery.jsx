@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight, FiX, FiZoomIn, FiPlay } from 'react-icons/fi';
 import { resolveImageUrl } from '../../services/api';
 import { getVideoEmbed } from '../../utils/video';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 /**
  * Landscape image gallery + "Watch Full Video" CTA under the image.
@@ -11,6 +12,7 @@ import { getVideoEmbed } from '../../utils/video';
 const ImageGallery = ({ images = [], name, videoUrl = '', onWatchVideo }) => {
   const [active, setActive] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
+  useBodyScrollLock(zoomOpen);
 
   const list = images.length ? images : [''];
   const hasVideo = Boolean(getVideoEmbed(videoUrl));

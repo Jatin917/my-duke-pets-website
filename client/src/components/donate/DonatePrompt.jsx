@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiHeart, FiX } from 'react-icons/fi';
 import { fetchDonateSettings } from '../../services/donateService';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 const DISMISS_KEY = 'myduke_donate_prompt_dismissed';
 
@@ -11,6 +12,11 @@ const DonatePrompt = () => {
   const [settings, setSettings] = useState(null);
   const [open, setOpen] = useState(false);
   const timerStarted = useRef(false);
+
+  const onDonatePage = location.pathname === '/donate' || location.pathname === '/login';
+  const visible = Boolean(open && settings && !onDonatePage);
+
+  useBodyScrollLock(visible);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +30,6 @@ const DonatePrompt = () => {
     };
   }, []);
 
-  // Start a single dwell timer for the whole session
   useEffect(() => {
     if (!settings?.promptEnabled || !settings?.pageEnabled) return undefined;
     if (sessionStorage.getItem(DISMISS_KEY) === '1') return undefined;
@@ -40,7 +45,6 @@ const DonatePrompt = () => {
     return () => clearTimeout(timer);
   }, [settings]);
 
-  // Don't show over donate/login; hide if already dismissed
   useEffect(() => {
     if (sessionStorage.getItem(DISMISS_KEY) === '1') setOpen(false);
     if (location.pathname === '/donate' || location.pathname === '/login') setOpen(false);
@@ -51,8 +55,7 @@ const DonatePrompt = () => {
     setOpen(false);
   };
 
-  const onDonatePage = location.pathname === '/donate' || location.pathname === '/login';
-  if (!open || !settings || onDonatePage) return null;
+  if (!visible) return null;
 
   return (
     <AnimatePresence>
@@ -60,7 +63,7 @@ const DonatePrompt = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+        className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 overscroll-none"
         onClick={dismiss}
       >
         <motion.div
@@ -69,7 +72,7 @@ const DonatePrompt = () => {
           exit={{ opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 22, stiffness: 260 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative overflow-hidden"
+          className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative overflow-hidden max-h-[90vh] overflow-y-auto"
         >
           <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary-100/80 blur-2xl pointer-events-none" />
           <button

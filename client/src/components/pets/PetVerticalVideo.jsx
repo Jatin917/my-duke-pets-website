@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiX, FiPlay } from 'react-icons/fi';
 import { getVideoEmbed } from '../../utils/video';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 /**
  * Vertical 9:16 pet video panel — plays inline beside the main image.
@@ -10,6 +10,7 @@ import { getVideoEmbed } from '../../utils/video';
 const PetVerticalVideo = ({ videoUrl, name, fullscreenOpen, onCloseFullscreen }) => {
   const inlineVideo = getVideoEmbed(videoUrl, { autoplay: true, mute: true });
   const modalVideo = getVideoEmbed(videoUrl, { autoplay: true, mute: false });
+  useBodyScrollLock(Boolean(fullscreenOpen && modalVideo));
 
   if (!inlineVideo) return null;
 

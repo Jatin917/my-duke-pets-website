@@ -13,6 +13,7 @@ import EnquiryModal from '../components/modals/EnquiryModal';
 import { fetchPets } from '../services/petService';
 import { SORT_OPTIONS } from '../utils/constants';
 import useDebounce from '../hooks/useDebounce';
+import useBodyScrollLock from '../hooks/useBodyScrollLock';
 
 const Pets = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -21,6 +22,7 @@ const Pets = () => {
   const [loading, setLoading] = useState(true);
   const [enquiryPet, setEnquiryPet] = useState(null);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  useBodyScrollLock(mobileFiltersOpen);
 
   const filters = useMemo(() => Object.fromEntries(searchParams.entries()), [searchParams]);
   const debouncedSearch = useDebounce(filters.search || '', 400);
@@ -91,9 +93,9 @@ const Pets = () => {
     <>
       <SEO title="Browse Pets" description="Browse all available pets for adoption filtered by category, breed, gender, price and more." />
 
-      <div className="bg-gray-50 min-h-screen pb-16">
+      <div className="bg-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
         <div className="bg-white border-b border-gray-100 py-8">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full min-w-0">
             <Breadcrumb items={[{ label: 'All Pets' }]} />
             <h1 className="font-display text-3xl font-bold text-gray-800 mt-3">
               Explore All Pets
@@ -104,21 +106,21 @@ const Pets = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
-          <div className="flex items-center justify-between mb-6 gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 w-full min-w-0">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-3 w-full min-w-0">
             <input
               type="text"
               placeholder="Search by name, breed..."
               value={filters.search || ''}
               onChange={(e) => setSearchParams({ ...filters, search: e.target.value, page: 1 })}
-              className="flex-1 max-w-md px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary-400 focus:outline-none text-sm bg-white"
+              className="w-full sm:flex-1 sm:max-w-md min-w-0 px-4 py-2.5 rounded-xl border border-gray-200 focus:border-primary-400 focus:outline-none text-sm bg-white"
             />
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto shrink-0">
               <select
                 value={filters.sort || 'newest'}
                 onChange={(e) => setSort(e.target.value)}
-                className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:border-primary-400 focus:outline-none"
+                className="flex-1 sm:flex-none min-w-0 px-3 sm:px-4 py-2.5 rounded-xl border border-gray-200 text-sm bg-white focus:border-primary-400 focus:outline-none"
               >
                 {SORT_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -129,7 +131,7 @@ const Pets = () => {
 
               <button
                 onClick={() => setMobileFiltersOpen(true)}
-                className="lg:hidden flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium"
+                className="lg:hidden flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium shrink-0"
               >
                 <FiFilter /> Filters
               </button>

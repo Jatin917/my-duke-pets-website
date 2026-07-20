@@ -7,6 +7,7 @@ import { FiX, FiCheckCircle, FiEye, FiLock } from 'react-icons/fi';
 import { submitEnquiry } from '../../services/enquiryService';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import { formatPrice } from '../../utils/formatters';
+import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
 const inputClass =
   'w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary-400 focus:ring-2 focus:ring-primary-100 focus:outline-none transition text-sm';
@@ -16,6 +17,7 @@ const EnquiryModal = ({ pet, onClose }) => {
   const [submitted, setSubmitted] = useState(false);
   const { isAuthenticated, customer } = useCustomerAuth();
   const navigate = useNavigate();
+  useBodyScrollLock(true);
   const {
     register,
     handleSubmit,
@@ -51,7 +53,7 @@ const EnquiryModal = ({ pet, onClose }) => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+        className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 overscroll-none"
         onClick={onClose}
       >
         <motion.div

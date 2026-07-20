@@ -12,6 +12,21 @@ html,
 body {
   font-family: 'Poppins', sans-serif;
   background-color: #fffaf6;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  min-height: 100%;
+}
+
+html.scroll-locked,
+html.scroll-locked body {
+  overscroll-behavior: none;
+  touch-action: none;
 }
 
 ::-webkit-scrollbar {

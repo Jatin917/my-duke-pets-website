@@ -4,7 +4,13 @@ import { WHATSAPP_LINK, PHONE_LINK } from '../../utils/constants';
 
 const FloatingContactButtons = () => {
   return (
-    <div className="fixed right-4 sm:right-6 bottom-24 sm:bottom-28 z-40 flex flex-col gap-4">
+    <div
+      className="fixed z-40 flex flex-col gap-3 sm:gap-4 overflow-visible"
+      style={{
+        right: 'max(0.75rem, env(safe-area-inset-right))',
+        bottom: 'max(5.5rem, calc(5.5rem + env(safe-area-inset-bottom)))',
+      }}
+    >
       <motion.a
         href={WHATSAPP_LINK()}
         target="_blank"
@@ -13,12 +19,12 @@ const FloatingContactButtons = () => {
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.4 }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="relative w-14 h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-500/40"
+        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-500/40 overflow-visible"
       >
-        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-pulseRing" />
-        <FaWhatsapp size={26} className="relative z-10" />
+        <span className="absolute inset-0 rounded-full bg-[#25D366] animate-pulseRing pointer-events-none" />
+        <FaWhatsapp size={22} className="relative z-10 sm:text-[26px]" />
       </motion.a>
 
       <motion.a
@@ -27,12 +33,12 @@ const FloatingContactButtons = () => {
         initial={{ opacity: 0, x: 40 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 0.55 }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        className="relative w-14 h-14 rounded-full btn-gradient text-white flex items-center justify-center shadow-lg shadow-orange-500/40"
+        className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full btn-gradient text-white flex items-center justify-center shadow-lg shadow-orange-500/40 overflow-visible"
       >
-        <span className="absolute inset-0 rounded-full bg-primary-500 animate-pulseRing" />
-        <FaPhoneAlt size={22} className="relative z-10" />
+        <span className="absolute inset-0 rounded-full bg-primary-500 animate-pulseRing pointer-events-none" />
+        <FaPhoneAlt size={18} className="relative z-10 sm:text-[22px]" />
       </motion.a>
     </div>
   );

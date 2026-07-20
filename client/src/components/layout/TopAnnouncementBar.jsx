@@ -36,7 +36,7 @@ const TopAnnouncementBar = ({ onDismiss }) => {
           exit={{ height: 0, opacity: 0 }}
           className="relative z-50 overflow-hidden bg-gradient-hero text-white"
         >
-          <div className="flex items-center h-9 sm:h-10 px-3 sm:px-6">
+          <div className="flex items-center h-9 sm:h-10 px-3 sm:px-6 min-w-0 w-full">
             <motion.div
               animate={{ y: [0, -3, 0] }}
               transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
@@ -46,8 +46,8 @@ const TopAnnouncementBar = ({ onDismiss }) => {
               <PawTrail />
             </motion.div>
 
-            <div className="flex-1 overflow-hidden">
-              <div className="flex whitespace-nowrap animate-marquee w-max text-xs sm:text-[13px] font-medium tracking-wide">
+            <div className="flex-1 overflow-hidden min-w-0">
+              <div className="flex whitespace-nowrap animate-marquee w-max max-w-none text-xs sm:text-[13px] font-medium tracking-wide">
                 <span className="pr-10">{MESSAGE}</span>
                 <span className="pr-10">{MESSAGE}</span>
               </div>

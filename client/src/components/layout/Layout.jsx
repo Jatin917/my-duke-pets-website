@@ -14,7 +14,7 @@ const Layout = () => {
   const [topBarVisible, setTopBarVisible] = useState(true);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen w-full max-w-[100%] overflow-x-hidden">
       <Toaster position="top-center" toastOptions={{ duration: 4000 }} />
       <ClickEffects />
 
@@ -23,7 +23,7 @@ const Layout = () => {
         <Navbar />
       </div>
 
-      <main className={`flex-1 transition-[padding] duration-300 ${topBarVisible ? 'pt-[108px] sm:pt-[116px]' : 'pt-[72px] sm:pt-[76px]'}`}>
+      <main className={`flex-1 w-full min-w-0 transition-[padding] duration-300 ${topBarVisible ? 'pt-[108px] sm:pt-[116px]' : 'pt-[72px] sm:pt-[76px]'}`}>
         <Outlet />
       </main>
       <Footer />

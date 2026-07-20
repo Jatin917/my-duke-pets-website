@@ -60,7 +60,7 @@ const Hero = () => {
         🦜
       </motion.div>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full min-w-0">
         <motion.span
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -97,21 +97,21 @@ const Hero = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           onSubmit={handleSearch}
-          className="max-w-xl mx-auto flex glass rounded-full p-2 shadow-2xl"
+          className="max-w-xl w-full mx-auto flex items-stretch glass rounded-full p-1.5 sm:p-2 shadow-2xl min-w-0"
         >
-          <div className="relative flex-1">
-            <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <div className="relative flex-1 min-w-0">
+            <FiSearch className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 shrink-0" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               type="text"
-              placeholder="Search by name, breed or category..."
-              className="w-full h-full pl-11 pr-3 py-2.5 bg-transparent focus:outline-none text-gray-800 placeholder:text-gray-500 text-sm sm:text-base"
+              placeholder="Search by name, breed..."
+              className="w-full min-w-0 h-full pl-9 sm:pl-11 pr-2 py-2.5 bg-transparent focus:outline-none text-gray-800 placeholder:text-gray-500 text-sm sm:text-base"
             />
           </div>
           <button
             type="submit"
-            className="btn-gradient text-white font-semibold px-6 sm:px-8 py-2.5 rounded-full shrink-0"
+            className="btn-gradient text-white font-semibold px-4 sm:px-8 py-2.5 rounded-full shrink-0 text-sm sm:text-base"
           >
             Search
           </button>
@@ -121,12 +121,14 @@ const Hero = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto mt-14"
+          className="grid grid-cols-3 gap-2 sm:gap-8 max-w-lg mx-auto mt-14 w-full"
         >
           {stats.map((stat) => (
-            <div key={stat.label} className="text-center">
-              <p className="text-2xl sm:text-3xl font-display font-bold text-white">{stat.value}</p>
-              <p className="text-xs sm:text-sm text-white/70 mt-1">{stat.label}</p>
+            <div key={stat.label} className="text-center min-w-0 px-0.5">
+              <p className="text-xl sm:text-3xl font-display font-bold text-white">{stat.value}</p>
+              <p className="text-[10px] sm:text-sm text-white/70 mt-1 leading-tight break-words">
+                {stat.label}
+              </p>
             </div>
           ))}
         </motion.div>
