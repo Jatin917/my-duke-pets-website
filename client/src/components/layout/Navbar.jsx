@@ -7,7 +7,6 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCompare } from '../../context/CompareContext';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
-import { SITE_NAME } from '../../utils/constants';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -44,32 +43,15 @@ const Navbar = () => {
     <header
       className={`relative w-full z-40 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-soft py-1.5 sm:py-2'
-          : 'bg-white/90 sm:bg-transparent py-1.5 sm:py-3'
+          ? 'bg-white shadow-soft py-2'
+          : 'bg-white sm:bg-transparent py-2 sm:py-3'
       }`}
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center gap-2 sm:gap-4">
-        {/* Compact brand on mobile — full stacked logo only from sm up */}
-        <Link
-          to="/"
-          className="flex sm:hidden items-center gap-2 min-w-0 shrink-0"
-          aria-label={SITE_NAME}
-        >
-          <img
-            src="/logo.png"
-            alt=""
-            className="h-9 w-9 rounded-full object-cover object-top bg-gray-50"
-            width={36}
-            height={36}
-            decoding="async"
-          />
-          <span className="font-display font-bold text-base text-primary-600 leading-tight truncate">
-            My Duke
-          </span>
-        </Link>
-        <div className="hidden sm:block shrink-0">
-          <BrandLogo imgClassName="h-11 sm:h-12 w-auto object-contain" />
-        </div>
+        <BrandLogo
+          className="shrink-0"
+          imgClassName="h-14 sm:h-12 w-auto max-w-[110px] sm:max-w-none object-contain object-left"
+        />
 
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
