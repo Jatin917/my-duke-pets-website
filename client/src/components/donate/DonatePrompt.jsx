@@ -63,13 +63,13 @@ const DonatePrompt = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 overscroll-none"
+        className="fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 overscroll-none"
         onClick={dismiss}
       >
         <motion.div
-          initial={{ opacity: 0, y: 40, scale: 0.96 }}
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20 }}
+          exit={{ opacity: 0, y: 12, scale: 0.98 }}
           transition={{ type: 'spring', damping: 22, stiffness: 260 }}
           onClick={(e) => e.stopPropagation()}
           className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 relative overflow-hidden max-h-[90vh] overflow-y-auto"

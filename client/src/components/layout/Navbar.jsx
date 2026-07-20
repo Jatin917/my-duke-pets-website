@@ -7,6 +7,7 @@ import { useWishlist } from '../../context/WishlistContext';
 import { useCompare } from '../../context/CompareContext';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
+import { SITE_NAME } from '../../utils/constants';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -42,11 +43,33 @@ const Navbar = () => {
   return (
     <header
       className={`relative w-full z-40 transition-all duration-300 ${
-        scrolled ? 'bg-white/90 backdrop-blur-md shadow-soft py-2' : 'bg-transparent py-4'
+        scrolled
+          ? 'bg-white/95 backdrop-blur-md shadow-soft py-1.5 sm:py-2'
+          : 'bg-white/90 sm:bg-transparent py-1.5 sm:py-3'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
-        <BrandLogo imgClassName="h-11 sm:h-12 w-auto object-contain" />
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center gap-2 sm:gap-4">
+        {/* Compact brand on mobile — full stacked logo only from sm up */}
+        <Link
+          to="/"
+          className="flex sm:hidden items-center gap-2 min-w-0 shrink-0"
+          aria-label={SITE_NAME}
+        >
+          <img
+            src="/logo.png"
+            alt=""
+            className="h-9 w-9 rounded-full object-cover object-top bg-gray-50"
+            width={36}
+            height={36}
+            decoding="async"
+          />
+          <span className="font-display font-bold text-base text-primary-600 leading-tight truncate">
+            My Duke
+          </span>
+        </Link>
+        <div className="hidden sm:block shrink-0">
+          <BrandLogo imgClassName="h-11 sm:h-12 w-auto object-contain" />
+        </div>
 
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
@@ -77,14 +100,15 @@ const Navbar = () => {
           </form>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 ml-auto shrink-0">
           <Link
             to="/compare"
-            className="relative hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-secondary-50 hover:text-secondary-600 transition"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-secondary-50 hover:text-secondary-600 transition"
+            aria-label="Compare"
           >
-            <FiBarChart2 />
+            <FiBarChart2 size={18} />
             {compareList.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-secondary-500 text-white text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-secondary-500 text-white text-[10px] flex items-center justify-center font-bold">
                 {compareList.length}
               </span>
             )}
@@ -92,11 +116,12 @@ const Navbar = () => {
 
           <Link
             to="/pets"
-            className="relative hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
+            aria-label="Wishlist"
           >
-            <FiHeart />
+            <FiHeart size={18} />
             {wishlist.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-primary-500 text-white text-[10px] flex items-center justify-center font-bold">
+              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary-500 text-white text-[10px] flex items-center justify-center font-bold">
                 {wishlist.length}
               </span>
             )}
@@ -104,10 +129,11 @@ const Navbar = () => {
 
           <Link
             to={isAuthenticated ? '/account' : '/login?return_url=/account'}
-            className="relative hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
             title={isAuthenticated ? customer?.name || 'Account' : 'Login'}
+            aria-label={isAuthenticated ? 'Account' : 'Login'}
           >
-            <FiUser />
+            <FiUser size={18} />
           </Link>
 
           <Link
@@ -119,7 +145,7 @@ const Navbar = () => {
 
           <button
             onClick={() => setOpen((o) => !o)}
-            className="lg:hidden w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-700"
+            className="lg:hidden w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full bg-gray-100 text-gray-700"
             aria-label="Toggle menu"
           >
             {open ? <FiX size={20} /> : <FiMenu size={20} />}

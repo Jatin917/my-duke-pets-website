@@ -20,7 +20,7 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative overflow-hidden pt-32 pb-24 sm:pt-40 sm:pb-32">
+    <section className="relative overflow-hidden pt-24 pb-20 sm:pt-40 sm:pb-32">
       {/* Background video */}
       <div className="absolute inset-0">
         <video

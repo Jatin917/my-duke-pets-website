@@ -23,7 +23,7 @@ const Layout = () => {
         <Navbar />
       </div>
 
-      <main className={`flex-1 w-full min-w-0 transition-[padding] duration-300 ${topBarVisible ? 'pt-[108px] sm:pt-[116px]' : 'pt-[72px] sm:pt-[76px]'}`}>
+      <main className={`flex-1 w-full min-w-0 transition-[padding] duration-300 ${topBarVisible ? 'pt-[80px] sm:pt-[108px]' : 'pt-[52px] sm:pt-[72px]'}`}>
         <Outlet />
       </main>
       <Footer />
