@@ -17,8 +17,6 @@ export const SORT_OPTIONS = [
 
 export const GENDER_OPTIONS = ['Male', 'Female', 'Unknown'];
 
-export const WISHLIST_KEY = 'petnest_wishlist';
-
 /** Google Drive direct file URL for HTML5 <video src>. Files must be shared “Anyone with the link”. */
 const driveVideoUrl = (fileId) =>
   `https://drive.google.com/uc?export=download&id=${fileId}`;

@@ -38,6 +38,7 @@ const Footer = () => {
               <li><Link to="/pets" className="hover:text-primary-400 transition">All Pets</Link></li>
               <li><Link to="/sell" className="hover:text-primary-400 transition">Sell a Pet</Link></li>
               <li><Link to="/donate" className="hover:text-primary-400 transition">Donate</Link></li>
+              <li><Link to="/help" className="hover:text-primary-400 transition">Help &amp; Support</Link></li>
               <li><Link to="/about" className="hover:text-primary-400 transition">About Us</Link></li>
               <li><Link to="/contact" className="hover:text-primary-400 transition">Contact</Link></li>
             </ul>

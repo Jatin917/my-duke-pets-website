@@ -8,7 +8,7 @@ const FloatingContactButtons = () => {
       className="fixed z-40 flex flex-col gap-3 sm:gap-4 overflow-visible"
       style={{
         right: 'max(0.75rem, env(safe-area-inset-right))',
-        bottom: 'max(5.5rem, calc(5.5rem + env(safe-area-inset-bottom)))',
+        bottom: 'max(7.5rem, calc(7.5rem + env(safe-area-inset-bottom)))',
       }}
     >
       <motion.a

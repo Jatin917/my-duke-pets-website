@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiHeart, FiShare2, FiBarChart2 } from 'react-icons/fi';
+import { FiShare2, FiBarChart2 } from 'react-icons/fi';
 import { MdVerified } from 'react-icons/md';
 import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
@@ -17,7 +17,6 @@ import PetFAQ from '../components/pets/PetFAQ';
 import EnquiryModal from '../components/modals/EnquiryModal';
 import PetPrice from '../components/pets/PetPrice';
 import { fetchPetById } from '../services/petService';
-import { useWishlist } from '../context/WishlistContext';
 import { useCompare } from '../context/CompareContext';
 import { getVideoEmbed } from '../utils/video';
 
@@ -28,7 +27,6 @@ const PetDetail = () => {
   const [loading, setLoading] = useState(true);
   const [enquiryPet, setEnquiryPet] = useState(null);
   const [videoFullscreen, setVideoFullscreen] = useState(false);
-  const { isWishlisted, toggleWishlist } = useWishlist();
   const { isComparing, toggleCompare } = useCompare();
 
   useEffect(() => {
@@ -56,7 +54,6 @@ const PetDetail = () => {
     );
   }
 
-  const wishlisted = isWishlisted(pet._id);
   const comparing = isComparing(pet._id);
   const hasVideo = Boolean(getVideoEmbed(pet.videoUrl));
 
@@ -111,17 +108,6 @@ const PetDetail = () => {
               <div className="mr-2">
                 <PetPrice pet={pet} size="lg" returnPath={`/pets/${pet.slug}`} />
               </div>
-              <button
-                onClick={() => toggleWishlist(pet._id)}
-                title="Add to Wishlist"
-                className={`w-11 h-11 rounded-full flex items-center justify-center border transition ${
-                  wishlisted
-                    ? 'bg-primary-500 text-white border-primary-500'
-                    : 'border-gray-200 text-gray-500 hover:border-primary-300 bg-white'
-                }`}
-              >
-                <FiHeart className={wishlisted ? 'fill-current' : ''} />
-              </button>
               <button
                 onClick={() => toggleCompare(pet._id)}
                 title="Add to Compare"

@@ -25,8 +25,8 @@ const BackToTop = () => {
           aria-label="Back to top"
           className={`fixed z-40 w-11 h-11 rounded-full bg-dark-900 text-white flex items-center justify-center shadow-lg hover:bg-primary-600 transition-all ${
             compareList.length > 0
-              ? 'left-4 sm:left-6 bottom-24 sm:bottom-28'
-              : 'right-4 sm:right-6 bottom-6'
+              ? 'left-4 sm:left-6 bottom-36 sm:bottom-28'
+              : 'left-4 sm:right-6 sm:left-auto bottom-24 sm:bottom-6'
           }`}
         >
           <FiArrowUp />

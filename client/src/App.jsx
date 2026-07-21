@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Account from './pages/Account';
 import Donate from './pages/Donate';
 import Sell from './pages/Sell';
+import Help from './pages/Help';
 import NotFound from './pages/NotFound';
 
 const ScrollToTop = () => {
@@ -42,6 +43,7 @@ function App() {
           <Route path="/account" element={<Account />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/sell" element={<Sell />} />
+          <Route path="/help" element={<Help />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

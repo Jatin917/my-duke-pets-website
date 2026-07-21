@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiMenu, FiX, FiSearch, FiHeart, FiBarChart2, FiUser } from 'react-icons/fi';
+import { FiMenu, FiX, FiSearch, FiUser } from 'react-icons/fi';
+import { FaHeadset } from 'react-icons/fa';
 import BrandLogo from '../common/BrandLogo';
-import { useWishlist } from '../../context/WishlistContext';
-import { useCompare } from '../../context/CompareContext';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
@@ -13,8 +12,8 @@ const navLinks = [
   { to: '/pets', label: 'All Pets' },
   { to: '/sell', label: 'Sell' },
   { to: '/donate', label: 'Donate' },
-  { to: '/about', label: 'About' },
   { to: '/contact', label: 'Contact' },
+  { to: '/about', label: 'About' },
 ];
 
 const Navbar = () => {
@@ -22,8 +21,6 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
-  const { wishlist } = useWishlist();
-  const { compareList } = useCompare();
   const { isAuthenticated, customer } = useCustomerAuth();
   useBodyScrollLock(open);
 
@@ -84,29 +81,12 @@ const Navbar = () => {
 
         <div className="flex items-center gap-1.5 sm:gap-3 ml-auto shrink-0">
           <Link
-            to="/compare"
-            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-secondary-50 hover:text-secondary-600 transition"
-            aria-label="Compare"
-          >
-            <FiBarChart2 size={18} />
-            {compareList.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-secondary-500 text-white text-[10px] flex items-center justify-center font-bold">
-                {compareList.length}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/pets"
+            to="/help"
             className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
-            aria-label="Wishlist"
+            aria-label="Help and support"
+            title="Help and support"
           >
-            <FiHeart size={18} />
-            {wishlist.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-primary-500 text-white text-[10px] flex items-center justify-center font-bold">
-                {wishlist.length}
-              </span>
-            )}
+            <FaHeadset size={18} />
           </Link>
 
           <Link
@@ -167,18 +147,18 @@ const Navbar = () => {
                 </NavLink>
               ))}
               <Link
-                to={isAuthenticated ? '/account' : '/login?return_url=/account'}
+                to="/help"
                 onClick={() => setOpen(false)}
                 className="block py-2 font-medium text-gray-700"
               >
-                {isAuthenticated ? 'My Account' : 'Login / Signup'}
+                Help &amp; Support
               </Link>
               <Link
-                to="/pets"
+                to={isAuthenticated ? '/account' : '/login?return_url=/account'}
                 onClick={() => setOpen(false)}
                 className="block text-center btn-gradient text-white font-semibold px-5 py-3 rounded-full"
               >
-                Adopt Now
+                {isAuthenticated ? 'My Account' : 'Login / Signup'}
               </Link>
             </div>
           </motion.div>

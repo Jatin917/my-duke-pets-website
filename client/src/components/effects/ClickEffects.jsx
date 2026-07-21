@@ -76,7 +76,7 @@ const ClickEffects = () => {
     };
 
     const paw = (x, y) => {
-      const sz = rand(34, 52);
+      const sz = rand(22, 34);
       const el = document.createElement('div');
       el.className = 'pn-fx-paw';
       el.style.left = `${x}px`;

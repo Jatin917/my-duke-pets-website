@@ -168,7 +168,7 @@ const Login = () => {
     <>
       <SEO title="Login" description={`Login or signup to ${SITE_NAME} with email or phone OTP verification.`} />
 
-      <div className="relative min-h-[calc(100vh-5rem)] overflow-hidden bg-[#1a1510]">
+      <div className="relative min-h-[calc(100vh-5rem)] bg-[#1a1510]">
         {/* Ambient grid */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.12]"
@@ -180,27 +180,26 @@ const Login = () => {
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary-900/40 via-transparent to-[#0c0a08]/70" />
 
-        <div className="relative mx-auto grid min-h-[calc(100vh-5rem)] max-w-7xl grid-cols-1 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="relative mx-auto grid max-w-7xl grid-cols-1 lg:grid-cols-[1.15fr_0.85fr] lg:min-h-[calc(100vh-5rem)]">
           {/* LEFT — video + thoughts */}
-          <section className="relative flex flex-col justify-center gap-8 px-5 py-10 sm:px-8 lg:px-12 lg:py-16">
+          <section className="relative flex flex-col justify-center gap-5 px-5 pt-6 pb-4 sm:gap-8 sm:px-8 sm:py-10 lg:px-12 lg:py-16">
             <div className="inline-flex w-fit items-center rounded-full border border-white/20 bg-white/5 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-200 backdrop-blur-sm">
               {SITE_NAME} · {SITE_TAGLINE}
             </div>
 
             <div>
-              <h1 className="font-display text-4xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.25rem]">
+              <h1 className="font-display text-3xl font-bold leading-[1.1] text-white sm:text-5xl lg:text-[3.25rem]">
                 Meet pets that{' '}
                 <span className="text-primary-400">move you</span>
                 <span className="text-white">.</span>
               </h1>
-              <p className="mt-4 max-w-xl text-base leading-relaxed text-white/70 sm:text-lg">
-                Login to unlock prices, save favourites, and enquire — while we help you find a companion
-                that fits your home&apos;s rhythm.
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-white/70 sm:mt-4 sm:text-lg">
+                Login to unlock prices, enquire, and find a companion that fits your home&apos;s rhythm.
               </p>
             </div>
 
             {/* Video panel */}
-            <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 aspect-[16/10] max-h-[320px] w-full bg-black/40">
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 aspect-[16/10] max-h-[180px] sm:max-h-[320px] w-full bg-black/40">
               <video
                 key={LOGIN_HERO_VIDEO}
                 className="h-full w-full object-cover"
@@ -211,7 +210,7 @@ const Login = () => {
                 playsInline
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1a1510]/85 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+              <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={thoughtIndex}
@@ -223,8 +222,8 @@ const Login = () => {
                     <p className="text-xs font-semibold uppercase tracking-wider text-primary-300">
                       Thought {thoughtIndex + 1}/{PET_THOUGHTS.length}
                     </p>
-                    <p className="mt-1 font-display text-lg font-bold text-white sm:text-xl">{thought.title}</p>
-                    <p className="mt-1 text-sm leading-relaxed text-white/75">{thought.text}</p>
+                    <p className="mt-1 font-display text-base font-bold text-white sm:text-xl">{thought.title}</p>
+                    <p className="mt-1 hidden text-sm leading-relaxed text-white/75 sm:block">{thought.text}</p>
                   </motion.div>
                 </AnimatePresence>
                 <div className="mt-3 flex gap-1.5">
@@ -266,7 +265,7 @@ const Login = () => {
           </section>
 
           {/* RIGHT — form card */}
-          <section className="relative flex items-center justify-center px-4 pb-12 pt-2 sm:px-8 lg:px-10 lg:py-16">
+          <section className="relative flex items-start justify-center px-4 pb-10 pt-1 sm:items-center sm:px-8 sm:pb-12 sm:pt-2 lg:px-10 lg:py-16">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

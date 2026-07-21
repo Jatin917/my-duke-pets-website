@@ -1,20 +1,17 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FiHeart, FiEye, FiBarChart2 } from 'react-icons/fi';
+import { FiEye, FiBarChart2 } from 'react-icons/fi';
 import { MdVerified } from 'react-icons/md';
 import { resolveImageUrl } from '../../services/api';
 import { truncate } from '../../utils/formatters';
-import { useWishlist } from '../../context/WishlistContext';
 import { useCompare } from '../../context/CompareContext';
 import PetPrice from './PetPrice';
 
 const PetCard = ({ pet, onEnquire, index = 0 }) => {
   const [imgIndex, setImgIndex] = useState(0);
-  const { isWishlisted, toggleWishlist } = useWishlist();
   const { isComparing, toggleCompare } = useCompare();
   const images = pet.images?.length ? pet.images : [];
-  const wishlisted = isWishlisted(pet._id);
   const comparing = isComparing(pet._id);
 
   return (
@@ -60,15 +57,6 @@ const PetCard = ({ pet, onEnquire, index = 0 }) => {
         </div>
 
         <div className="absolute top-3 right-3 flex flex-col gap-2">
-          <button
-            onClick={() => toggleWishlist(pet._id)}
-            aria-label="Toggle wishlist"
-            className={`w-9 h-9 rounded-full flex items-center justify-center backdrop-blur-md transition ${
-              wishlisted ? 'bg-primary-500 text-white' : 'bg-white/80 text-gray-600 hover:text-primary-500'
-            }`}
-          >
-            <FiHeart className={wishlisted ? 'fill-current' : ''} />
-          </button>
           <button
             onClick={() => toggleCompare(pet._id)}
             aria-label="Toggle compare"

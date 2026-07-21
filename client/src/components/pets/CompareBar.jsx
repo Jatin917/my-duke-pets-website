@@ -33,7 +33,7 @@ const CompareBar = () => {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', damping: 24, stiffness: 260 }}
-          className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-3 sm:px-6 sm:pb-4"
+          className="fixed bottom-0 left-0 right-0 z-40 px-3 pb-20 sm:px-6 sm:pb-4"
         >
           <div className="max-w-4xl mx-auto glass-dark rounded-2xl shadow-2xl px-4 sm:px-6 py-3 flex items-center gap-4 border border-white/10">
             <div className="flex items-center gap-2 shrink-0 text-white">

@@ -6,6 +6,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import FloatingContactButtons from './FloatingContactButtons';
 import BackToTop from './BackToTop';
+import MobileQuickFooter from './MobileQuickFooter';
 import CompareBar from '../pets/CompareBar';
 import ClickEffects from '../effects/ClickEffects';
 import DonatePrompt from '../donate/DonatePrompt';
@@ -23,12 +24,17 @@ const Layout = () => {
         <Navbar />
       </div>
 
-      <main className={`flex-1 w-full min-w-0 transition-[padding] duration-300 ${topBarVisible ? 'pt-[92px] sm:pt-[108px]' : 'pt-[64px] sm:pt-[72px]'}`}>
+      <main
+        className={`flex-1 w-full min-w-0 transition-[padding] duration-300 ${
+          topBarVisible ? 'pt-[92px] sm:pt-[108px]' : 'pt-[64px] sm:pt-[72px]'
+        } pb-24 sm:pb-0`}
+      >
         <Outlet />
       </main>
       <Footer />
       <FloatingContactButtons />
       <BackToTop />
+      <MobileQuickFooter />
       <CompareBar />
       <DonatePrompt />
     </div>

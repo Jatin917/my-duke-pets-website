@@ -40,7 +40,7 @@ const Privacy = () => (
         <section>
           <h2 className="text-xl font-bold text-gray-800 mb-2">4. Cookies</h2>
           <p>
-            We use local storage to remember your wishlist preferences. We do not use tracking
+            We use local storage to remember your compare list preferences. We do not use tracking
             cookies for advertising purposes.
           </p>
         </section>
