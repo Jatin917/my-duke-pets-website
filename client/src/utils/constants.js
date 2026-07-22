@@ -1,4 +1,4 @@
-export const SITE_NAME = import.meta.env.VITE_SITE_NAME || 'My Duke';
+export const SITE_NAME = 'My Duke';
 export const SITE_TAGLINE = import.meta.env.VITE_SITE_TAGLINE || 'pet solution';
 export const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919999999999';
 export const PHONE_NUMBER = import.meta.env.VITE_PHONE_NUMBER || '+919999999999';
