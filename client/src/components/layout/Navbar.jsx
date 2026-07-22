@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiMenu, FiX, FiSearch, FiUser } from 'react-icons/fi';
 import { FaHeadset } from 'react-icons/fa';
-import BrandLogo from '../common/BrandLogo';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
+import { SITE_NAME } from '../../utils/constants';
+import navLogo from '../../assets/logo.png';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -21,6 +22,7 @@ const Navbar = () => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, customer } = useCustomerAuth();
   useBodyScrollLock(open);
 
@@ -36,6 +38,17 @@ const Navbar = () => {
     setOpen(false);
   };
 
+  const goHome = (e) => {
+    e.preventDefault();
+    if (location.pathname === '/') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const idx = window.history.state?.idx ?? 0;
+    if (idx > 0) navigate(-idx);
+    else navigate('/', { replace: true });
+  };
+
   return (
     <header
       className={`relative w-full z-40 transition-all duration-300 ${
@@ -45,10 +58,22 @@ const Navbar = () => {
       }`}
     >
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center gap-2 sm:gap-4">
-        <BrandLogo
-          className="shrink-0"
-          imgClassName="h-14 sm:h-12 w-auto max-w-[110px] sm:max-w-none object-contain object-left"
-        />
+        <Link
+          to="/"
+          onClick={goHome}
+          className="flex items-center gap-2.5 shrink-0 min-w-0"
+          aria-label={SITE_NAME}
+        >
+          <img
+            src={navLogo}
+            alt=""
+            className="h-10 w-10 sm:h-11 sm:w-11 object-contain"
+            decoding="async"
+          />
+          <span className="font-display font-extrabold text-base sm:text-lg text-primary-600 tracking-wide truncate">
+            {SITE_NAME}
+          </span>
+        </Link>
 
         <nav className="hidden lg:flex items-center gap-8">
           {navLinks.map((link) => (
