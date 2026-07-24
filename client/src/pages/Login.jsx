@@ -203,6 +203,8 @@ const Login = () => {
             <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 aspect-[16/10] max-h-[180px] sm:max-h-[320px] w-full bg-black/40">
               <StreamVideo
                 src="/videos/loginPageVideo.mp4"
+                mobileSrc="/videos/loginPageVideo-mobile.mp4"
+                poster="/videos/loginPageVideo-poster.jpg"
                 className="h-full w-full object-cover"
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1a1510]/85 via-transparent to-transparent" />

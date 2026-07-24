@@ -25,6 +25,8 @@ const Hero = () => {
       <div className="absolute inset-0">
         <StreamVideo
           src="/videos/backgroundVideo.mp4"
+          mobileSrc="/videos/backgroundVideo-mobile.mp4"
+          poster="/videos/backgroundVideo-poster.jpg"
           className="h-full w-full object-cover"
         />
         {/* Readability overlays — keep headline / search readable over footage */}
