@@ -34,7 +34,7 @@ coverage/
 .turbo/
 *.local
 
-# Large local video assets (not for git — use demo clips in app)
+# Large original camera dumps (keep compressed mp4 in public/videos)
 client/src/assets/*.MOV
 client/src/assets/*.mov
-client/public/videos/
+client/src/assets/*.mp4

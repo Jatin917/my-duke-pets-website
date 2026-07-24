@@ -6,7 +6,8 @@ import { FiMail, FiPhone, FiArrowLeft, FiUser, FiCheck } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import BrandLogo from '../components/common/BrandLogo';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
-import { LOGIN_HERO_VIDEO, SITE_NAME, SITE_TAGLINE } from '../utils/constants';
+import { SITE_NAME, SITE_TAGLINE } from '../utils/constants';
+import StreamVideo from '../components/common/StreamVideo';
 
 const PET_THOUGHTS = [
   {
@@ -200,14 +201,9 @@ const Login = () => {
 
             {/* Video panel */}
             <div className="relative overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40 aspect-[16/10] max-h-[180px] sm:max-h-[320px] w-full bg-black/40">
-              <video
-                key={LOGIN_HERO_VIDEO}
+              <StreamVideo
+                src="/videos/loginPageVideo.mp4"
                 className="h-full w-full object-cover"
-                src={LOGIN_HERO_VIDEO}
-                autoPlay
-                muted
-                loop
-                playsInline
               />
               <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1a1510]/85 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-5">

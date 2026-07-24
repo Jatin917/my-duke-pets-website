@@ -16,17 +16,3 @@ export const SORT_OPTIONS = [
 ];
 
 export const GENDER_OPTIONS = ['Male', 'Female', 'Unknown'];
-
-/** Google Drive direct file URL for HTML5 <video src>. Files must be shared “Anyone with the link”. */
-const driveVideoUrl = (fileId) =>
-  `https://drive.google.com/uc?export=download&id=${fileId}`;
-
-/** Login page left-panel video (Google Drive). */
-export const LOGIN_HERO_VIDEO =
-  import.meta.env.VITE_LOGIN_HERO_VIDEO ||
-  driveVideoUrl('1oDJy7zE3p_kkUmSfKdGFvriCIy4byTyS');
-
-/** Home page hero background video (Google Drive). */
-export const HOME_HERO_VIDEO =
-  import.meta.env.VITE_HOME_HERO_VIDEO ||
-  driveVideoUrl('1FEiqhy79nsKlGsLVUjcpqLgLRdfdAzTi');

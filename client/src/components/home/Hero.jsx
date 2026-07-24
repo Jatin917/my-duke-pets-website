@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiSearch } from 'react-icons/fi';
-import { HOME_HERO_VIDEO } from '../../utils/constants';
+import StreamVideo from '../common/StreamVideo';
 
 const stats = [
   { value: '2,500+', label: 'Happy Pets' },
@@ -21,16 +21,11 @@ const Hero = () => {
 
   return (
     <section className="relative overflow-hidden pt-24 pb-20 sm:pt-40 sm:pb-32">
-      {/* Background video */}
+      {/* Background video — progressive stream from /public/videos */}
       <div className="absolute inset-0">
-        <video
+        <StreamVideo
+          src="/videos/backgroundVideo.mp4"
           className="h-full w-full object-cover"
-          src={HOME_HERO_VIDEO}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
         />
         {/* Readability overlays — keep headline / search readable over footage */}
         <div className="absolute inset-0 bg-[#1a1528]/72" />
