@@ -19,10 +19,10 @@ const ContactSection = () => {
   };
 
   return (
-    <section className="py-20 bg-white">
+    <section id="enquiries" className="py-20 bg-white scroll-mt-28 sm:scroll-mt-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeading
-          eyebrow="Get In Touch"
+          eyebrow="Enquiries"
           title="We'd Love To Hear From You"
           description="Have a question about a pet, adoption process, or partnership? Reach out to us anytime."
         />

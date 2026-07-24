@@ -1,13 +1,15 @@
 import { useCallback, useState } from 'react';
 import SEO from '../components/common/SEO';
 import Hero from '../components/home/Hero';
+import StatementSlide from '../components/home/StatementSlide';
+import BuySellSlide from '../components/home/BuySellSlide';
+import ServicesSlide from '../components/home/ServicesSlide';
 import CategoriesSection from '../components/home/CategoriesSection';
 import PetsShowcaseSection from '../components/home/PetsShowcaseSection';
 import WhyChooseUs from '../components/home/WhyChooseUs';
 import OurAdvantage from '../components/home/OurAdvantage';
 import Testimonials from '../components/home/Testimonials';
 import FAQSection from '../components/home/FAQSection';
-import ContactSection from '../components/home/ContactSection';
 import EnquiryModal from '../components/modals/EnquiryModal';
 import { fetchFeaturedPets, fetchLatestPets } from '../services/petService';
 
@@ -21,9 +23,12 @@ const Home = () => {
     <>
       <SEO
         title="Home"
-        description="Find your perfect furry friend. Browse verified, healthy & vaccinated dogs, cats, birds, rabbits, fish and exotic pets."
+        description="My Duke connects genuine pet parents and responsible breeders across India — every listing checked, every pet cared for."
       />
       <Hero />
+      <StatementSlide />
+      <BuySellSlide />
+      <ServicesSlide />
       <CategoriesSection />
       <PetsShowcaseSection
         eyebrow="Featured Pets"
@@ -45,7 +50,6 @@ const Home = () => {
       />
       <Testimonials />
       <FAQSection />
-      <ContactSection />
 
       {enquiryPet && <EnquiryModal pet={enquiryPet} onClose={() => setEnquiryPet(null)} />}
     </>
