@@ -46,7 +46,7 @@ const GenuineSellerSeal = () => (
           fontSize="13"
           fontWeight="600"
           letterSpacing="3.2"
-          style={{ fontFamily: 'Poppins, sans-serif' }}
+          style={{ fontFamily: '"Nunito Sans", ui-sans-serif, system-ui, sans-serif' }}
         >
           <textPath href="#seal-rim" startOffset="0%">
             MY DUKE • GENUINE SELLER • MY DUKE • GENUINE SELLER •

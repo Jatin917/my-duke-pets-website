@@ -34,8 +34,8 @@ export default {
         },
       },
       fontFamily: {
-        sans: ['Poppins', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Baloo 2', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Nunito Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
       },
       boxShadow: {
         soft: '0 10px 40px -10px rgba(0,0,0,0.15)',
