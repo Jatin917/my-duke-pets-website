@@ -6,7 +6,8 @@ import { FaHeadset } from 'react-icons/fa';
 import { useCustomerAuth } from '../../context/CustomerAuthContext';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { SITE_NAME } from '../../utils/constants';
-import navLogo from '../../assets/logo.png';
+import logoMark from '../../assets/logo-mark.png';
+import logoFull from '../../assets/logo-full.png';
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -65,14 +66,17 @@ const Navbar = () => {
           aria-label={SITE_NAME}
         >
           <img
-            src={navLogo}
+            src={logoMark}
             alt=""
-            className="h-10 w-10 sm:h-11 sm:w-11 object-contain"
+            className="h-7 w-7 sm:h-8 sm:w-8 object-contain"
             decoding="async"
           />
-          <span className="font-display font-extrabold text-base sm:text-lg text-primary-600 tracking-wide truncate">
-            {SITE_NAME}
-          </span>
+          <img
+            src={logoFull}
+            alt={SITE_NAME}
+            className="h-6 sm:h-7 w-auto object-contain"
+            decoding="async"
+          />
         </Link>
 
         <nav className="hidden lg:flex items-center gap-8">

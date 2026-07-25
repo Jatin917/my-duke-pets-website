@@ -122,8 +122,8 @@ const Donate = () => {
             <Breadcrumb items={[{ label: 'Donate' }]} />
             <div className="flex flex-col lg:flex-row lg:items-end gap-8 justify-between">
               <div className="max-w-2xl">
-                <div className="mb-4">
-                  <BrandLogo asLink={false} imgClassName="h-16 w-auto object-contain drop-shadow" />
+                <div className="mb-4 inline-flex items-center bg-white rounded-2xl px-4 py-2.5 shadow-lg">
+                  <BrandLogo asLink={false} imgClassName="h-14 w-auto object-contain" />
                 </div>
                 <h1 className="font-display text-3xl sm:text-5xl font-bold leading-tight">
                   {settings.heroTitle}
