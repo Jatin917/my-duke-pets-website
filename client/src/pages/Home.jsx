@@ -11,13 +11,12 @@ import OurAdvantage from '../components/home/OurAdvantage';
 import Testimonials from '../components/home/Testimonials';
 import FAQSection from '../components/home/FAQSection';
 import EnquiryModal from '../components/modals/EnquiryModal';
-import { fetchFeaturedPets, fetchLatestPets } from '../services/petService';
+import { fetchFeaturedPets } from '../services/petService';
 
 const Home = () => {
   const [enquiryPet, setEnquiryPet] = useState(null);
 
   const featuredFetcher = useCallback(() => fetchFeaturedPets(), []);
-  const latestFetcher = useCallback(() => fetchLatestPets(), []);
 
   return (
     <>
@@ -40,14 +39,6 @@ const Home = () => {
       />
       <WhyChooseUs />
       <OurAdvantage />
-      <PetsShowcaseSection
-        eyebrow="Newest Arrivals"
-        title="Recently Added Pets"
-        description="Fresh new companions looking for their forever homes."
-        fetcher={latestFetcher}
-        onEnquire={setEnquiryPet}
-        bgClass="bg-white"
-      />
       <Testimonials />
       <FAQSection />
 
