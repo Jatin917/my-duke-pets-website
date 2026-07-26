@@ -9,6 +9,7 @@ import PetsShowcaseSection from '../components/home/PetsShowcaseSection';
 import WhyChooseUs from '../components/home/WhyChooseUs';
 import OurAdvantage from '../components/home/OurAdvantage';
 import Testimonials from '../components/home/Testimonials';
+import SeoTopics from '../components/home/SeoTopics';
 import FAQSection from '../components/home/FAQSection';
 import EnquiryModal from '../components/modals/EnquiryModal';
 import { fetchFeaturedPets } from '../services/petService';
@@ -21,8 +22,10 @@ const Home = () => {
   return (
     <>
       <SEO
-        title="Home"
-        description="My Duke connects genuine pet parents and responsible breeders across India — every listing checked, every pet cared for."
+        path="/"
+        title="Buy & Sell Verified Pets in India"
+        description="Buy dogs, cats, birds, rabbits, fish & exotic pets online in India. My Duke lists only healthy, vaccinated pets from verified sellers — find your companion or rehome responsibly."
+        keywords="buy pets online India, sell pets India, verified dogs for sale, cats for sale, puppies India, kittens India, adopt pets, rehome pets, My Duke pet marketplace"
       />
       <Hero />
       <StatementSlide />
@@ -40,6 +43,7 @@ const Home = () => {
       <WhyChooseUs />
       <OurAdvantage />
       <Testimonials />
+      <SeoTopics />
       <FAQSection />
 
       {enquiryPet && <EnquiryModal pet={enquiryPet} onClose={() => setEnquiryPet(null)} />}

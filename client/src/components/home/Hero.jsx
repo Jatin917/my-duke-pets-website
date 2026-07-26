@@ -13,11 +13,7 @@ const GenuineSellerSeal = () => (
     className="relative mx-auto h-40 w-40 sm:h-48 sm:w-48 shrink-0"
     aria-label={`${SITE_NAME} Genuine Seller`}
   >
-    <motion.div
-      className="absolute inset-0"
-      animate={{ rotate: 360 }}
-      transition={{ duration: 28, repeat: Infinity, ease: 'linear' }}
-    >
+    <div className="absolute inset-0 animate-spin-slow">
       <svg viewBox="0 0 200 200" className="h-full w-full" aria-hidden="true">
         <defs>
           <path
@@ -53,7 +49,7 @@ const GenuineSellerSeal = () => (
           </textPath>
         </text>
       </svg>
-    </motion.div>
+    </div>
 
     <div className="absolute inset-[22%] rounded-full border border-white/30 bg-white/10 backdrop-blur-sm flex items-center justify-center text-center px-3">
       <span className="font-display text-[10px] sm:text-xs font-extrabold tracking-[0.12em] text-white uppercase leading-snug">

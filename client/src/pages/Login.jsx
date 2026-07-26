@@ -167,7 +167,7 @@ const Login = () => {
 
   return (
     <>
-      <SEO title="Login" description={`Login or signup to ${SITE_NAME} with email or phone OTP verification.`} />
+      <SEO title="Login" description={`Login or signup to ${SITE_NAME} with email or phone OTP verification.`} noindex path="/login" />
 
       <div className="relative min-h-[calc(100vh-5rem)] bg-[#1a1510]">
         {/* Ambient grid */}

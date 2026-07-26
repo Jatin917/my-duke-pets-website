@@ -34,8 +34,10 @@ const values = [
 const About = () => (
   <>
     <SEO
-      title="About Us"
-      description={`Who we are, our core values, and the story behind ${SITE_NAME}.`}
+      path="/about"
+      title={`About ${SITE_NAME} — Trusted Pet Marketplace India`}
+      description={`${SITE_NAME} connects genuine pet parents with responsible breeders across India. Learn our story, values, and how we verify every listing.`}
+      keywords="about My Duke, pet marketplace India, verified pet sellers, ethical breeders India"
     />
 
     <div className="bg-gradient-hero pt-28 pb-16 sm:pb-20">

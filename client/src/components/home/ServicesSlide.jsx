@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence, useAnimationFrame, useMotionValue, useTransform } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   FiClipboard,
   FiFlag,
@@ -84,10 +84,10 @@ const catmullRomPath = (points) => {
 };
 const ROAD_PATH = catmullRomPath(POINTS);
 
-const AUTO_DURATION_MS = 14000; // one-way travel time
+const AUTO_DURATION_MS = 16000; // one-way travel time
 const CHECKPOINT_WINDOW = 0.03;
 
-const buildLengthTable = (pathEl, samples = 260) => {
+const buildLengthTable = (pathEl, samples = 120) => {
   const total = pathEl.getTotalLength();
   const table = [];
   for (let i = 0; i <= samples; i += 1) {
@@ -101,13 +101,14 @@ const buildLengthTable = (pathEl, samples = 260) => {
 const nearestFraction = (table, total, x, y) => {
   let bestLen = 0;
   let bestDist = Infinity;
-  table.forEach((s) => {
+  for (let i = 0; i < table.length; i += 1) {
+    const s = table[i];
     const d = (s.x - x) ** 2 + (s.y - y) ** 2;
     if (d < bestDist) {
       bestDist = d;
       bestLen = s.len;
     }
-  });
+  }
   return total ? bestLen / total : 0;
 };
 
@@ -185,16 +186,12 @@ const Checkpoint = ({ service, index, point, isActive, onHoverStart, onHoverEnd 
           className="relative flex focus:outline-none"
         >
           {isActive && (
-            <motion.span
-              className="absolute inset-[-6px] rounded-full bg-primary-400/30"
-              animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
-              transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
-            />
+            <span className="pointer-events-none absolute inset-[-6px] rounded-full bg-primary-400/25 ring-2 ring-primary-300/40" />
           )}
           <span
-            className={`relative flex h-12 w-12 items-center justify-center rounded-full border-[3px] text-lg shadow-soft transition-all duration-300 sm:h-14 sm:w-14 sm:text-xl ${
+            className={`relative flex h-12 w-12 items-center justify-center rounded-full border-[3px] text-lg shadow-soft transition-transform duration-200 sm:h-14 sm:w-14 sm:text-xl ${
               isActive
-                ? 'scale-110 border-[#f4f4f4] bg-gradient-primary text-white shadow-glow'
+                ? 'scale-110 border-[#f4f4f4] bg-gradient-primary text-white'
                 : 'border-[#f4f4f4] bg-white text-primary-600 hover:scale-105 hover:bg-gradient-primary hover:text-white'
             }`}
           >
@@ -220,11 +217,11 @@ const Checkpoint = ({ service, index, point, isActive, onHoverStart, onHoverEnd 
             <motion.div
               id={`svc-desc-${service.num}`}
               role="tooltip"
-              initial={{ opacity: 0, scale: 0.94, y: placeAbove ? 6 : -6 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.94, y: placeAbove ? 4 : -4 }}
-              transition={{ duration: 0.18 }}
-              className={`absolute z-[60] w-[min(14rem,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#1a1528] px-4 py-3 text-left text-[11.5px] leading-relaxed text-white/90 shadow-[0_18px_45px_-12px_rgba(19,17,28,0.65)] sm:text-[12px] ${tooltipAlign} ${
+              initial={{ opacity: 0, y: placeAbove ? 6 : -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className={`absolute z-[60] w-[min(14rem,calc(100vw-2rem))] rounded-2xl border border-white/10 bg-[#1a1528] px-4 py-3 text-left text-[11.5px] leading-relaxed text-white/90 shadow-soft sm:text-[12px] ${tooltipAlign} ${
                 placeAbove
                   ? 'bottom-[calc(100%+2.85rem)]'
                   : 'top-[calc(100%+2.85rem)]'
@@ -239,9 +236,14 @@ const Checkpoint = ({ service, index, point, isActive, onHoverStart, onHoverEnd 
   );
 };
 
-const RoadTrack = () => {
+﻿const RoadTrack = () => {
   const containerRef = useRef(null);
   const pathRef = useRef(null);
+  const dogRef = useRef(null);
+  const visibleRef = useRef(false);
+  const rafRef = useRef(0);
+  const frameSkipRef = useRef(0);
+  const mouseThrottleRef = useRef(0);
 
   const modeRef = useRef('auto');
   const progressRef = useRef(0);
@@ -254,11 +256,6 @@ const RoadTrack = () => {
   const checkpointFractionsRef = useRef([]);
   const readyRef = useRef(false);
 
-  const dogXRaw = useMotionValue((POINTS[0].x / VB.w) * 100);
-  const dogYRaw = useMotionValue((POINTS[0].y / VB.h) * 100);
-  const dogLeft = useTransform(dogXRaw, (v) => `${v}%`);
-  const dogTop = useTransform(dogYRaw, (v) => `${v}%`);
-
   const [facing, setFacing] = useState('right');
   const [hoverActive, setHoverActive] = useState(null);
   const [dogActive, setDogActive] = useState(null);
@@ -270,84 +267,108 @@ const RoadTrack = () => {
     const { total, table } = buildLengthTable(pathRef.current);
     totalLenRef.current = total;
     tableRef.current = table;
-    checkpointFractionsRef.current = POINTS.map((p) => nearestFraction(table, total, p.x, p.y));
+    checkpointFractionsRef.current = POINTS.map((pt) => nearestFraction(table, total, pt.x, pt.y));
     readyRef.current = true;
+    if (dogRef.current) {
+      const x = (POINTS[0].x / VB.w) * containerRef.current.offsetWidth;
+      const y = (POINTS[0].y / VB.h) * containerRef.current.offsetHeight;
+      dogRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+    }
   }, []);
 
-  useAnimationFrame((_, delta) => {
-    if (!readyRef.current || !pathRef.current) return;
-    const total = totalLenRef.current;
-    const table = tableRef.current;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return undefined;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+      },
+      { rootMargin: '80px', threshold: 0.05 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
-    if (modeRef.current === 'auto') {
-      const fractions = checkpointFractionsRef.current;
-      let minDist = Infinity;
-      let newActive = null;
-      fractions.forEach((frac, i) => {
-        const dist = Math.abs(progressRef.current - frac);
-        if (dist < minDist) minDist = dist;
-        if (dist < CHECKPOINT_WINDOW) newActive = i;
-      });
-      const speedFactor = minDist < CHECKPOINT_WINDOW ? 0.05 : 1;
-      const step = (delta / AUTO_DURATION_MS) * speedFactor;
-      let next = progressRef.current + step;
-      let teleported = false;
-      if (next >= 1) {
-        next = 0;
-        teleported = true;
-      }
-      progressRef.current = next;
+  useEffect(() => {
+    let last = performance.now();
+    const tick = (now) => {
+      rafRef.current = requestAnimationFrame(tick);
+      if (!readyRef.current || !pathRef.current || !visibleRef.current) return;
+      if (document.visibilityState !== 'visible') return;
+      frameSkipRef.current ^= 1;
+      if (frameSkipRef.current === 0) return;
 
-      if (teleported) {
-        facingRef.current = 'right';
-        setFacing('right');
-      }
+      const delta = Math.min(now - last, 40);
+      last = now;
+      const total = totalLenRef.current;
+      const table = tableRef.current;
 
-      if (newActive !== activeDogRef.current) {
-        activeDogRef.current = newActive;
-        setDogActive(newActive);
-      }
-    } else {
-      // Snap follow target to nearest point ON the road path — never leave the asphalt.
-      const targetFrac = nearestFraction(table, total, mouseRef.current.x, mouseRef.current.y);
-      const blend = Math.min(1, delta * 0.01);
-      progressRef.current += (targetFrac - progressRef.current) * blend;
-
-      let nearestIndex = null;
-      let nearestDist = Infinity;
-      checkpointFractionsRef.current.forEach((frac, i) => {
-        const dist = Math.abs(progressRef.current - frac);
-        if (dist < nearestDist) {
-          nearestDist = dist;
-          nearestIndex = i;
+      if (modeRef.current === 'auto') {
+        const fractions = checkpointFractionsRef.current;
+        let minDist = Infinity;
+        let newActive = null;
+        for (let i = 0; i < fractions.length; i += 1) {
+          const dist = Math.abs(progressRef.current - fractions[i]);
+          if (dist < minDist) minDist = dist;
+          if (dist < CHECKPOINT_WINDOW) newActive = i;
         }
-      });
-      const finalActive = nearestDist < CHECKPOINT_WINDOW * 1.6 ? nearestIndex : null;
-      if (finalActive !== activeDogRef.current) {
-        activeDogRef.current = finalActive;
-        setDogActive(finalActive);
+        const speedFactor = minDist < CHECKPOINT_WINDOW ? 0.08 : 1;
+        let next = progressRef.current + (delta / AUTO_DURATION_MS) * speedFactor;
+        if (next >= 1) {
+          next = 0;
+          facingRef.current = 'right';
+          setFacing('right');
+        }
+        progressRef.current = next;
+        if (newActive !== activeDogRef.current) {
+          activeDogRef.current = newActive;
+          setDogActive(newActive);
+        }
+      } else {
+        const targetFrac = nearestFraction(table, total, mouseRef.current.x, mouseRef.current.y);
+        progressRef.current += (targetFrac - progressRef.current) * Math.min(1, delta * 0.012);
+        let nearestIndex = null;
+        let nearestDist = Infinity;
+        const fractions = checkpointFractionsRef.current;
+        for (let i = 0; i < fractions.length; i += 1) {
+          const dist = Math.abs(progressRef.current - fractions[i]);
+          if (dist < nearestDist) {
+            nearestDist = dist;
+            nearestIndex = i;
+          }
+        }
+        const finalActive = nearestDist < CHECKPOINT_WINDOW * 1.6 ? nearestIndex : null;
+        if (finalActive !== activeDogRef.current) {
+          activeDogRef.current = finalActive;
+          setDogActive(finalActive);
+        }
       }
-    }
 
-    // Position is always taken from the path — dog never leaves the road.
-    const pt = pathRef.current.getPointAtLength(progressRef.current * total);
-    const prev = posRef.current;
-
-    if (Math.abs(pt.x - prev.x) > 0.35) {
-      const nextFacing = pt.x > prev.x ? 'right' : 'left';
-      if (facingRef.current !== nextFacing) {
-        facingRef.current = nextFacing;
-        setFacing(nextFacing);
+      const pt = pathRef.current.getPointAtLength(progressRef.current * total);
+      const prev = posRef.current;
+      if (Math.abs(pt.x - prev.x) > 0.5) {
+        const nextFacing = pt.x > prev.x ? 'right' : 'left';
+        if (facingRef.current !== nextFacing) {
+          facingRef.current = nextFacing;
+          setFacing(nextFacing);
+        }
       }
-    }
-
-    posRef.current = { x: pt.x, y: pt.y };
-    dogXRaw.set((pt.x / VB.w) * 100);
-    dogYRaw.set((pt.y / VB.h) * 100);
-  });
+      posRef.current = { x: pt.x, y: pt.y };
+      if (dogRef.current && containerRef.current) {
+        const x = (pt.x / VB.w) * containerRef.current.offsetWidth;
+        const y = (pt.y / VB.h) * containerRef.current.offsetHeight;
+        dogRef.current.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`;
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
 
   const handleMouseMove = (e) => {
     if (!containerRef.current) return;
+    const now = performance.now();
+    if (now - mouseThrottleRef.current < 32) return;
+    mouseThrottleRef.current = now;
     modeRef.current = 'follow';
     mouseRef.current = clientToLocal(containerRef.current, e.clientX, e.clientY);
   };
@@ -369,10 +390,7 @@ const RoadTrack = () => {
   return (
     <div
       className="relative mx-auto flex w-full items-center justify-center overflow-visible py-24 sm:py-32 lg:py-40"
-      style={{
-        // Space for the -45° rotated long rectangle AABB
-        minHeight: 'min(68vw, 34rem)',
-      }}
+      style={{ minHeight: 'min(68vw, 34rem)' }}
     >
       <div
         ref={containerRef}
@@ -382,6 +400,7 @@ const RoadTrack = () => {
         style={{
           aspectRatio: `${VB.w} / ${VB.h}`,
           transform: `rotate(${ROTATION_DEG}deg)`,
+          contain: 'layout style',
         }}
       >
         <svg
@@ -390,26 +409,8 @@ const RoadTrack = () => {
           className="absolute inset-0 h-full w-full"
           aria-hidden="true"
         >
-          <defs>
-            <linearGradient id="road-glow" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0%" stopColor="#fb923c" stopOpacity="0" />
-              <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
-              <stop offset="100%" stopColor="#fb923c" stopOpacity="0" />
-            </linearGradient>
-          </defs>
-
-          <motion.path
-            d={ROAD_PATH}
-            fill="none"
-            stroke="#241f34"
-            strokeWidth={136}
-            strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, ease: 'easeInOut' }}
-          />
-          <motion.path
+          <path d={ROAD_PATH} fill="none" stroke="#241f34" strokeWidth={136} strokeLinecap="round" />
+          <path
             ref={pathRef}
             d={ROAD_PATH}
             fill="none"
@@ -417,10 +418,6 @@ const RoadTrack = () => {
             strokeWidth={6.5}
             strokeDasharray="20 22"
             strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }}
-            whileInView={{ pathLength: 1, opacity: 0.9 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.4, delay: 0.1, ease: 'easeInOut' }}
           />
         </svg>
 
@@ -438,30 +435,21 @@ const RoadTrack = () => {
           />
         ))}
 
-        {/* The dog */}
-        <motion.div
-          className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2"
-          style={{ left: dogLeft, top: dogTop }}
+        <div
+          ref={dogRef}
+          className="pointer-events-none absolute left-0 top-0 z-20 will-change-transform"
         >
-          <motion.div
-            animate={{ y: [0, -2, 0] }}
-            transition={{ duration: 0.55, repeat: Infinity, ease: 'easeInOut' }}
-            className="relative flex flex-col items-center"
+          <span
+            className="text-5xl drop-shadow-md sm:text-6xl lg:text-7xl"
+            style={{
+              display: 'inline-block',
+              lineHeight: 1,
+              transform: `rotate(${-ROTATION_DEG}deg) ${facing === 'left' ? 'scaleX(-1)' : ''}`,
+            }}
           >
-            <span
-              className="text-5xl drop-shadow-md sm:text-6xl lg:text-7xl"
-              style={{
-                display: 'inline-block',
-                lineHeight: 1,
-                // Keep dog upright relative to the page, and face travel direction
-                transform: `rotate(${-ROTATION_DEG}deg) ${facing === 'left' ? 'scaleX(-1)' : ''}`,
-              }}
-            >
-              🐶
-            </span>
-            <span className="mt-0.5 h-2 w-8 rounded-full bg-black/20 blur-[1.5px]" />
-          </motion.div>
-        </motion.div>
+            🐶
+          </span>
+        </div>
       </div>
     </div>
   );
@@ -479,12 +467,7 @@ const ServicesSlide = () => (
 
     <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-col gap-3 sm:mb-14 sm:flex-row sm:items-end sm:justify-between">
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-xl"
-        >
+        <div className="max-w-xl">
           <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-400 sm:mb-3 sm:text-[11px]">
             What We Handle
           </p>
@@ -493,18 +476,11 @@ const ServicesSlide = () => (
             <span className="text-primary-600 italic">&lsquo;I want a pet&rsquo;</span> and{' '}
             <span className="text-primary-600 italic">&lsquo;welcome home.&rsquo;</span>
           </h2>
-        </motion.div>
-
-        <motion.p
-          initial={{ opacity: 0, y: 14 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.08 }}
-          className="hidden max-w-sm text-sm leading-relaxed text-gray-500 sm:block sm:text-right sm:text-[15px]"
-        >
-          Watch the pup walk the road — move your cursor into the box and it'll follow you to any
+        </div>
+        <p className="hidden max-w-sm text-sm leading-relaxed text-gray-500 sm:block sm:text-right sm:text-[15px]">
+          Watch the pup walk the road — move your cursor into the box and it will follow you to any
           checkpoint.
-        </motion.p>
+        </p>
       </div>
     </div>
 

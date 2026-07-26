@@ -91,7 +91,12 @@ const Pets = () => {
 
   return (
     <>
-      <SEO title="Browse Pets" description="Browse all available pets for adoption filtered by category, breed, gender, price and more." />
+      <SEO
+        path="/pets"
+        title="Browse Pets for Sale & Adoption in India"
+        description="Browse verified dogs, cats, birds, rabbits, fish and exotic pets for sale or adoption across India. Filter by breed, city, gender, and price on My Duke."
+        keywords="pets for sale India, dogs for sale, cats for sale, puppies near me, kittens for sale, birds for sale, exotic pets, browse pets My Duke"
+      />
 
       <div className="bg-gray-50 min-h-screen pb-16 w-full overflow-x-hidden">
         <div className="bg-white border-b border-gray-100 py-8">

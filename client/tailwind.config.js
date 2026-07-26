@@ -77,9 +77,10 @@ export default {
         pulseRing: 'pulseRing 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         floatY: 'floatY 4s ease-in-out infinite',
         shimmer: 'shimmer 2s infinite linear',
-        marquee: 'marquee 22s linear infinite',
+        marquee: 'marquee 36s linear infinite',
         bounceSoft: 'bounceSoft 1.4s ease-in-out infinite',
         pawTrail: 'pawTrail 1.2s ease-in-out infinite',
+        'spin-slow': 'spin 32s linear infinite',
       },
       borderRadius: {
         xl2: '1.25rem',

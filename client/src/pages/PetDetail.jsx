@@ -19,6 +19,7 @@ import PetPrice from '../components/pets/PetPrice';
 import { fetchPetById } from '../services/petService';
 import { useCompare } from '../context/CompareContext';
 import { getVideoEmbed } from '../utils/video';
+import { SITE_URL } from '../utils/constants';
 
 const PetDetail = () => {
   const { id } = useParams();
@@ -60,9 +61,34 @@ const PetDetail = () => {
   return (
     <>
       <SEO
-        title={pet.seoTitle || pet.name}
-        description={pet.seoDescription || pet.description}
+        title={pet.seoTitle || `${pet.name} for Sale`}
+        description={
+          pet.seoDescription ||
+          pet.description ||
+          `${pet.name} — ${pet.breed?.name || 'pet'} available on My Duke. Healthy, verified listing with photos and details.`
+        }
         image={pet.images?.[0]}
+        path={`/pets/${pet._id || pet.id || id}`}
+        type="article"
+        keywords={`${pet.name}, ${pet.breed?.name || ''}, ${pet.category?.name || 'pet'} for sale, buy ${pet.breed?.name || 'pet'} India, My Duke`}
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          name: pet.name,
+          description: pet.seoDescription || pet.description,
+          image: pet.images?.[0],
+          brand: { '@type': 'Brand', name: 'My Duke' },
+          category: pet.category?.name,
+          offers: pet.price
+            ? {
+                '@type': 'Offer',
+                priceCurrency: 'INR',
+                price: pet.price,
+                availability: 'https://schema.org/InStock',
+                url: `${SITE_URL}/pets/${pet._id || pet.id || id}`,
+              }
+            : undefined,
+        }}
       />
 
       <div className="bg-gray-50 min-h-screen pb-16">

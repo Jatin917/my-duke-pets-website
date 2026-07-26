@@ -145,8 +145,10 @@ const Sell = () => {
   return (
     <>
       <SEO
-        title="Sell a Pet"
-        description={`List your pet for sale on ${SITE_NAME}. Choose category and breed, then add photos and details.`}
+        path="/sell"
+        title="Sell or Rehome Your Pet Online in India"
+        description={`List your dog, cat, or other pet for sale on ${SITE_NAME}. Free listing with photos, health details, and genuine buyer enquiries across India.`}
+        keywords="sell pets online India, rehome dog, sell puppies, list pet for sale, sell cats India, My Duke sell pet"
       />
 
       <div className="bg-gray-50 min-h-screen pb-16">

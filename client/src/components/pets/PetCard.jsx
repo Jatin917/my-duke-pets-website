@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { FiEye, FiBarChart2 } from 'react-icons/fi';
 import { MdVerified } from 'react-icons/md';
 import { resolveImageUrl } from '../../services/api';
@@ -8,21 +7,14 @@ import { truncate } from '../../utils/formatters';
 import { useCompare } from '../../context/CompareContext';
 import PetPrice from './PetPrice';
 
-const PetCard = ({ pet, onEnquire, index = 0 }) => {
+const PetCard = ({ pet, onEnquire }) => {
   const [imgIndex, setImgIndex] = useState(0);
   const { isComparing, toggleCompare } = useCompare();
   const images = pet.images?.length ? pet.images : [];
   const comparing = isComparing(pet._id);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.4, delay: (index % 8) * 0.05 }}
-      whileHover={{ y: -8 }}
-      className="group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-glow transition-shadow duration-300 flex flex-col"
-    >
+    <div className="group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-glow hover:-translate-y-1 transition-[transform,box-shadow] duration-200 flex flex-col">
       <div
         className="relative h-56 overflow-hidden bg-gray-100"
         onMouseEnter={() => images.length > 1 && setImgIndex(1)}
@@ -34,7 +26,7 @@ const PetCard = ({ pet, onEnquire, index = 0 }) => {
               src={resolveImageUrl(images[imgIndex] || images[0])}
               alt={pet.name}
               loading="lazy"
-              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-gray-300 text-5xl">🐾</div>
@@ -112,7 +104,7 @@ const PetCard = ({ pet, onEnquire, index = 0 }) => {
           </button>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

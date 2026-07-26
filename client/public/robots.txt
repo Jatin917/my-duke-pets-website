@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+Disallow: /account
+Disallow: /login
+Disallow: /compare
+
+Sitemap: https://mydukepetsolution.com/sitemap.xml

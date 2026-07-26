@@ -14,7 +14,7 @@ const Account = () => {
 
   return (
     <>
-      <SEO title="My Account" description={`Manage your ${SITE_NAME} account.`} />
+      <SEO title="My Account" description={`Manage your ${SITE_NAME} account.`} noindex path="/account" />
 
       <div className="bg-gray-50 min-h-[70vh] pb-16">
         <div className="bg-white border-b border-gray-100 py-8">

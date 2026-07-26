@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   FiActivity,
   FiArrowLeft,
@@ -61,8 +60,8 @@ const advantages = [
 ];
 
 const COUNT = advantages.length;
-const loopedAdvantages = [...advantages, ...advantages, ...advantages];
-const AUTO_SPEED = 0.55; // px per frame (~33 px/s at 60fps)
+const loopedAdvantages = [...advantages, ...advantages];
+const AUTOPLAY_MS = 4200;
 
 const AdvantageCard = ({ item }) => (
   <article className="group relative flex h-[300px] w-full flex-col overflow-hidden rounded-2xl border border-black/[0.06] bg-[#151222] p-5 sm:h-[340px] sm:p-7">
@@ -94,9 +93,8 @@ const OurAdvantage = () => {
   const scrollerRef = useRef(null);
   const setWidthRef = useRef(0);
   const pausedRef = useRef(false);
-  const userScrollRef = useRef(false);
-  const resumeTimerRef = useRef(null);
-  const rafRef = useRef(0);
+  const scrollRafRef = useRef(0);
+  const visibleRef = useRef(false);
   const [active, setActive] = useState(0);
 
   const getCards = useCallback(() => {
@@ -107,7 +105,6 @@ const OurAdvantage = () => {
   const measure = useCallback(() => {
     const cards = getCards();
     if (cards.length > COUNT) {
-      // Width of one full set of cards (first → COUNT-th)
       setWidthRef.current = cards[COUNT].offsetLeft - cards[0].offsetLeft;
     }
   }, [getCards]);
@@ -119,14 +116,15 @@ const OurAdvantage = () => {
     const mid = el.scrollLeft + el.clientWidth / 2;
     let nearest = 0;
     let nearestDist = Infinity;
-    cards.forEach((card, index) => {
+    for (let index = 0; index < cards.length; index += 1) {
+      const card = cards[index];
       const center = card.offsetLeft + card.offsetWidth / 2;
       const dist = Math.abs(center - mid);
       if (dist < nearestDist) {
         nearestDist = dist;
         nearest = index;
       }
-    });
+    }
     setActive(nearest % COUNT);
   }, [getCards]);
 
@@ -134,105 +132,119 @@ const OurAdvantage = () => {
     const el = scrollerRef.current;
     const w = setWidthRef.current;
     if (!el || !w) return;
-    // Keep scrollLeft inside the middle copy so we can always scroll both ways.
-    while (el.scrollLeft >= w * 2) el.scrollLeft -= w;
-    while (el.scrollLeft < w) el.scrollLeft += w;
+    if (el.scrollLeft >= w) el.scrollLeft -= w;
+    if (el.scrollLeft < 0) el.scrollLeft += w;
   }, []);
 
-  // Continuous auto-scroll
+  const scrollByCard = useCallback(
+    (direction, { fromAuto = false } = {}) => {
+      const el = scrollerRef.current;
+      const cards = getCards();
+      if (!el || !cards.length) return;
+      if (!fromAuto) pausedRef.current = true;
+
+      measure();
+      const styles = getComputedStyle(el);
+      const gap = parseFloat(styles.columnGap || styles.gap) || 16;
+      const amount = cards[0].offsetWidth + gap;
+
+      if (direction < 0 && el.scrollLeft < amount / 2 && setWidthRef.current) {
+        el.scrollLeft += setWidthRef.current;
+      }
+
+      el.scrollBy({ left: direction * amount, behavior: 'smooth' });
+
+      window.setTimeout(() => {
+        normalize();
+        updateActive();
+        if (!fromAuto) {
+          window.setTimeout(() => {
+            pausedRef.current = false;
+          }, 2500);
+        }
+      }, 450);
+    },
+    [getCards, measure, normalize, updateActive]
+  );
+
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return undefined;
 
     measure();
-    // Start in the middle copy so prev/next both work immediately
-    if (setWidthRef.current) el.scrollLeft = setWidthRef.current;
     updateActive();
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+      },
+      { rootMargin: '100px', threshold: 0.05 }
+    );
+    observer.observe(el);
 
-    const tick = () => {
-      if (
-        !pausedRef.current &&
-        !userScrollRef.current &&
-        document.visibilityState === 'visible' &&
-        setWidthRef.current
-      ) {
-        el.scrollLeft += AUTO_SPEED;
-        if (el.scrollLeft >= setWidthRef.current * 2) {
-          el.scrollLeft -= setWidthRef.current;
-        }
+    const onScroll = () => {
+      if (scrollRafRef.current) return;
+      scrollRafRef.current = requestAnimationFrame(() => {
+        scrollRafRef.current = 0;
         updateActive();
-      }
-      rafRef.current = requestAnimationFrame(tick);
+        normalize();
+      });
     };
-    rafRef.current = requestAnimationFrame(tick);
-
     const onResize = () => {
       measure();
-      normalize();
       updateActive();
     };
+
+    el.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', onResize);
 
+    const id = window.setInterval(() => {
+      if (
+        visibleRef.current &&
+        !pausedRef.current &&
+        document.visibilityState === 'visible'
+      ) {
+        scrollByCard(1, { fromAuto: true });
+      }
+    }, AUTOPLAY_MS);
+
     return () => {
-      cancelAnimationFrame(rafRef.current);
+      el.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onResize);
-      clearTimeout(resumeTimerRef.current);
+      observer.disconnect();
+      window.clearInterval(id);
+      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
     };
-  }, [measure, normalize, updateActive]);
-
-  const pauseForUser = () => {
-    userScrollRef.current = true;
-    clearTimeout(resumeTimerRef.current);
-    resumeTimerRef.current = setTimeout(() => {
-      userScrollRef.current = false;
-      normalize();
-    }, 2200);
-  };
-
-  const scrollByCard = (direction) => {
-    const el = scrollerRef.current;
-    const cards = getCards();
-    if (!el || !cards.length) return;
-    pauseForUser();
-    normalize();
-    const styles = getComputedStyle(el);
-    const gap = parseFloat(styles.columnGap || styles.gap) || 16;
-    const amount = cards[0].offsetWidth + gap;
-    el.scrollBy({ left: direction * amount, behavior: 'smooth' });
-  };
+  }, [measure, normalize, scrollByCard, updateActive]);
 
   const goTo = (index) => {
     const el = scrollerRef.current;
     const cards = getCards();
-    if (!el || !cards.length || !setWidthRef.current) return;
-    pauseForUser();
-    normalize();
-    // Target the card in the middle copy
-    const card = cards[index + COUNT];
+    if (!el || !cards.length) return;
+    pausedRef.current = true;
+    const card = cards[index] || cards[index + COUNT];
     if (!card) return;
     el.scrollTo({
       left: card.offsetLeft - (el.clientWidth - card.offsetWidth) / 2,
       behavior: 'smooth',
     });
+    window.setTimeout(() => {
+      pausedRef.current = false;
+      updateActive();
+    }, 2500);
   };
 
   return (
     <section className="relative overflow-hidden bg-[#f3f3f3] py-14 sm:py-20 lg:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-end justify-between gap-4 sm:mb-12">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="max-w-2xl"
-          >
+          <div className="max-w-2xl">
             <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-gray-400 sm:text-[11px]">
               Trusted Care Across Every Step
             </p>
             <h2 className="font-display text-[1.85rem] font-extrabold leading-[1.1] text-gray-900 sm:text-4xl lg:text-5xl">
               Our Advantage
             </h2>
-          </motion.div>
+          </div>
 
           <div className="hidden items-center gap-2 sm:flex">
             <button
@@ -265,20 +277,19 @@ const OurAdvantage = () => {
         }}
         onTouchStart={() => {
           pausedRef.current = true;
-          pauseForUser();
         }}
         onTouchEnd={() => {
-          pausedRef.current = false;
+          window.setTimeout(() => {
+            pausedRef.current = false;
+          }, 2500);
         }}
-        onWheel={pauseForUser}
-        onScroll={updateActive}
-        className="scrollbar-hide flex gap-4 overflow-x-auto px-4 pb-3 sm:gap-5 sm:px-6 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
+        className="scrollbar-hide flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-3 sm:gap-5 sm:px-6 lg:px-[max(2rem,calc((100vw-80rem)/2+2rem))]"
       >
         {loopedAdvantages.map((item, index) => (
           <div
             key={`${item.title}-${index}`}
             data-advantage-card
-            className="w-[78%] max-w-[300px] shrink-0 sm:w-[46%] sm:max-w-[340px] lg:w-[32%] lg:max-w-[380px]"
+            className="w-[78%] max-w-[300px] shrink-0 snap-center sm:w-[46%] sm:max-w-[340px] lg:w-[32%] lg:max-w-[380px]"
           >
             <AdvantageCard item={item} />
           </div>
