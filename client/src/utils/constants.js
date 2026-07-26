@@ -35,6 +35,9 @@ export const WHATSAPP_LINK = (message = 'Hello, I am interested in your pet.') =
 
 export const PHONE_LINK = `tel:${PHONE_NUMBER}`;
 
+export const FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61592086103682';
+export const INSTAGRAM_URL = 'https://www.instagram.com/mydukepetsolution/';
+
 export const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest First' },
   { value: 'price-asc', label: 'Price: Low to High' },

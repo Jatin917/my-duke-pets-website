@@ -1,7 +1,12 @@
 import { Link } from 'react-router-dom';
-import { FiFacebook, FiInstagram, FiTwitter, FiYoutube, FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
-import { SITE_NAME, PHONE_NUMBER } from '../../utils/constants';
+import { FiFacebook, FiInstagram, FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
+import { SITE_NAME, PHONE_NUMBER, FACEBOOK_URL, INSTAGRAM_URL } from '../../utils/constants';
 import BrandLogo from '../common/BrandLogo';
+
+const socialLinks = [
+  { Icon: FiFacebook, href: FACEBOOK_URL, label: 'Facebook' },
+  { Icon: FiInstagram, href: INSTAGRAM_URL, label: 'Instagram' },
+];
 
 const Footer = () => {
   const year = new Date().getFullYear();
@@ -19,10 +24,13 @@ const Footer = () => {
               shelters. Every pet, a new best friend.
             </p>
             <div className="flex gap-3">
-              {[FiFacebook, FiInstagram, FiTwitter, FiYoutube].map((Icon, i) => (
+              {socialLinks.map(({ Icon, href, label }) => (
                 <a
-                  key={i}
-                  href="#"
+                  key={label}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={label}
                   className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary-500 hover:text-white transition"
                 >
                   <Icon size={16} />

@@ -9,7 +9,6 @@ import PetsShowcaseSection from '../components/home/PetsShowcaseSection';
 import WhyChooseUs from '../components/home/WhyChooseUs';
 import OurAdvantage from '../components/home/OurAdvantage';
 import Testimonials from '../components/home/Testimonials';
-import SeoTopics from '../components/home/SeoTopics';
 import FAQSection from '../components/home/FAQSection';
 import EnquiryModal from '../components/modals/EnquiryModal';
 import { fetchFeaturedPets } from '../services/petService';
@@ -43,7 +42,6 @@ const Home = () => {
       <WhyChooseUs />
       <OurAdvantage />
       <Testimonials />
-      <SeoTopics />
       <FAQSection />
 
       {enquiryPet && <EnquiryModal pet={enquiryPet} onClose={() => setEnquiryPet(null)} />}

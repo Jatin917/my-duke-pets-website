@@ -2,11 +2,13 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { FaFacebookF, FaInstagram, FaWhatsapp, FaYoutube } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import { FiClock, FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
 import {
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
   PHONE_LINK,
   PHONE_NUMBER,
   SITE_NAME,
@@ -24,14 +26,13 @@ const contactDetails = [
 ];
 
 const socialLinks = [
-  { icon: FaInstagram, label: 'Instagram', href: 'https://instagram.com' },
-  { icon: FaFacebookF, label: 'Facebook', href: 'https://facebook.com' },
+  { icon: FaInstagram, label: 'Instagram', href: INSTAGRAM_URL },
+  { icon: FaFacebookF, label: 'Facebook', href: FACEBOOK_URL },
   {
     icon: FaWhatsapp,
     label: 'WhatsApp',
     href: WHATSAPP_LINK('Hello My Duke, I would like to speak with your team.'),
   },
-  { icon: FaYoutube, label: 'YouTube', href: 'https://youtube.com' },
 ];
 
 const Contact = () => {
