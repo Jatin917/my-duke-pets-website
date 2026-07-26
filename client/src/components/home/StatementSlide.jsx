@@ -34,7 +34,7 @@ const StatementSlide = () => (
         transition={{ delay: 0.06 }}
         className="font-display text-2xl sm:text-3xl lg:text-[2.5rem] font-bold text-primary-600 leading-snug italic mb-7"
       >
-        A pet is not a purchase. It&apos;s a promise that outlives the sale.
+        We don&apos;t just find pets. We help families find their missing heart.
       </motion.h2>
 
       <motion.p

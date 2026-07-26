@@ -1,37 +1,37 @@
 import { motion } from 'framer-motion';
-import { FiShield, FiTruck, FiHeart, FiHeadphones } from 'react-icons/fi';
 
 const features = [
   {
     num: '01',
-    icon: FiShield,
-    title: 'Verified & Healthy',
+    emoji: '❤️',
+    title: 'Healthy & Verified Pets',
     description:
-      'Every pet is health-checked, vaccinated and verified before listing — paperwork included, never promised later.',
+      'Every pet is health-checked, vaccinated, and carefully cared for before joining your family.',
     span: 'lg:col-span-2',
     dark: true,
   },
   {
     num: '02',
-    icon: FiHeart,
-    title: 'Ethical Sourcing',
+    emoji: '🏡',
+    title: 'Raised With Love',
     description:
-      'We partner only with responsible breeders & shelters who prioritize animal welfare.',
+      'Our pets are raised with proper care, affection, and socialization to ensure they are friendly and confident.',
     span: '',
   },
   {
     num: '03',
-    icon: FiTruck,
-    title: 'Safe Delivery',
-    description: 'Secure, comfortable transport options available across major cities.',
+    emoji: '🐾',
+    title: 'Lifetime Guidance',
+    description:
+      "From choosing the right pet to after-care, grooming, nutrition, and training — we're always here for you.",
     span: '',
   },
   {
     num: '04',
-    icon: FiHeadphones,
-    title: '24/7 Support',
+    emoji: '😊',
+    title: 'Bringing Happiness Home',
     description:
-      'Our pet care experts are always available to guide you before & after adoption — from first question to homecoming day.',
+      'A pet brings unconditional love, positive energy, and smiles that make every house feel like home.',
     span: 'lg:col-span-2',
   },
 ];
@@ -111,12 +111,11 @@ const WhyChooseUs = () => (
               <div className="flex items-start justify-between mb-6">
                 <span
                   className={`flex h-14 w-14 items-center justify-center rounded-2xl text-2xl transition-transform duration-300 group-hover:scale-105 ${
-                    feature.dark
-                      ? 'bg-white/10 text-primary-300'
-                      : 'bg-gradient-primary text-white shadow-glow'
+                    feature.dark ? 'bg-white/10' : 'bg-primary-50 shadow-soft'
                   }`}
+                  aria-hidden="true"
                 >
-                  <feature.icon />
+                  {feature.emoji}
                 </span>
                 <span
                   className={`font-display text-2xl font-extrabold ${
