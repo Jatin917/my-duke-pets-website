@@ -22,12 +22,70 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
-const allowedOrigins = [process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean);
+/** Strip path/trailing slash so https://site.com/ and https://site.com match. */
+const toOrigin = (value) => {
+  if (!value) return null;
+  try {
+    return new URL(String(value).trim()).origin;
+  } catch {
+    return String(value).trim().replace(/\/$/, '') || null;
+  }
+};
+
+/** Include www + apex variants so either hostname works. */
+const withWwwVariants = (origin) => {
+  if (!origin) return [];
+  const set = new Set([origin]);
+  try {
+    const url = new URL(origin);
+    if (url.hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(url.hostname)) {
+      return [...set];
+    }
+    if (url.hostname.startsWith('www.')) {
+      set.add(`${url.protocol}//${url.hostname.slice(4)}`);
+    } else {
+      set.add(`${url.protocol}//www.${url.hostname}`);
+    }
+  } catch {
+    /* ignore */
+  }
+  return [...set];
+};
+
+const configuredOrigins = [
+  process.env.CLIENT_URL,
+  process.env.ADMIN_URL,
+  ...(process.env.ALLOWED_ORIGINS || '').split(','),
+]
+  .map(toOrigin)
+  .flatMap(withWwwVariants);
+
+if (process.env.NODE_ENV !== 'production') {
+  configuredOrigins.push(
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174'
+  );
+}
+
+const allowedOrigins = [...new Set(configuredOrigins.filter(Boolean))];
 
 app.use(
   cors({
-    origin: allowedOrigins.length ? allowedOrigins : '*',
+    origin(origin, callback) {
+      // Non-browser / same-origin proxy requests often omit Origin.
+      if (!origin) return callback(null, true);
+      if (!allowedOrigins.length || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      console.warn(`[cors] blocked origin: ${origin}`);
+      return callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    optionsSuccessStatus: 204,
   })
 );
 
