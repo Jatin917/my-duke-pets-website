@@ -13,13 +13,18 @@ import {
   sendEnquiryConfirmationEmail,
   sendEnquiryAdminEmail,
   sendEnquiryStatusEmail,
+  hasEmailFailure,
+  notifyDeliveryFailure,
 } from '../utils/email.js';
 
 // @desc    Create enquiry
 // @route   POST /api/enquiry
 // @access  Public
 export const createEnquiry = asyncHandler(async (req, res) => {
-  const { name, phone, email, city, state, address, pet, message } = req.body;
+  const { city, state, address, pet, message } = req.body;
+  const name = req.customer.name || 'Pet Parent';
+  const phone = req.customer.phone || '';
+  const email = req.customer.email || '';
 
   const petDoc = await Pet.findById(pet).populate('category', 'name');
 
@@ -43,10 +48,21 @@ export const createEnquiry = asyncHandler(async (req, res) => {
 
   await Promise.all([appendEnquiryToExcel(enquiry), appendEnquiryToGoogleSheet(enquiry)]);
 
-  Promise.all([
-    sendEnquiryConfirmationEmail({ enquiry }),
+  const emailResults = await Promise.all([
+    enquiry.email
+      ? sendEnquiryConfirmationEmail({ enquiry })
+      : Promise.resolve({ skipped: true }),
     sendEnquiryAdminEmail({ enquiry }),
-  ]).catch(() => {});
+  ]);
+
+  if (hasEmailFailure(emailResults)) {
+    await notifyDeliveryFailure({
+      userEmail: enquiry.email,
+      userName: enquiry.name,
+      context: 'pet enquiry',
+      results: emailResults,
+    }).catch(() => {});
+  }
 
   res.status(201).json({
     success: true,

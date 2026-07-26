@@ -8,6 +8,7 @@ import BrandLogo from '../components/common/BrandLogo';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { SITE_NAME, SITE_TAGLINE } from '../utils/constants';
 import StreamVideo from '../components/common/StreamVideo';
+import { isMsg91Configured, msg91RetryOtp, msg91SendOtp, msg91VerifyOtp, preloadMsg91 } from '../utils/msg91';
 
 const PET_THOUGHTS = [
   {
@@ -35,10 +36,12 @@ const HIGHLIGHTS = [
 ];
 
 const Login = () => {
-  const { requestOtp, loginWithOtp, finishSignup, isAuthenticated, loading } = useCustomerAuth();
+  const { requestOtp, loginWithOtp, loginWithMsg91, finishSignup, isAuthenticated, loading } =
+    useCustomerAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('return_url') || '/account';
+  const loginRequired = searchParams.get('reason') === 'required';
 
   const [channel, setChannel] = useState('phone');
   const [step, setStep] = useState('input');
@@ -48,14 +51,21 @@ const Login = () => {
   const [extraEmail, setExtraEmail] = useState('');
   const [extraPhone, setExtraPhone] = useState('');
   const [otp, setOtp] = useState('');
-  const [demoOtp, setDemoOtp] = useState('');
   const [signupToken, setSignupToken] = useState('');
   const [resendIn, setResendIn] = useState(0);
   const [thoughtIndex, setThoughtIndex] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [statusText, setStatusText] = useState('');
 
   useEffect(() => {
     if (isAuthenticated) navigate(returnUrl, { replace: true });
   }, [isAuthenticated, navigate, returnUrl]);
+
+  // Warm MSG91 as soon as login opens so Get OTP feels instant.
+  useEffect(() => {
+    preloadMsg91();
+  }, []);
 
   useEffect(() => {
     if (resendIn <= 0) return undefined;
@@ -75,6 +85,17 @@ const Login = () => {
       ? { channel: 'phone', phone: phone.replace(/\D/g, '').slice(-10) }
       : { channel: 'email', email: email.trim().toLowerCase() };
 
+  const handleAuthSuccess = (data) => {
+    if (data.isNewUser) {
+      setSignupToken(data.signupToken);
+      setStep('details');
+      toast.success('OTP verified — complete your profile');
+      return;
+    }
+    toast.success(`Welcome back${data.customer?.name ? `, ${data.customer.name}` : ''}!`);
+    navigate(returnUrl, { replace: true });
+  };
+
   const handleSendOtp = async (e) => {
     e?.preventDefault();
     try {
@@ -89,35 +110,114 @@ const Login = () => {
         return;
       }
 
-      const data = await requestOtp(payload);
-      setDemoOtp(data.otp || '');
-      setStep('otp');
-      setResendIn(60);
-      toast.success(data.otp ? `OTP sent (demo): ${data.otp}` : 'OTP sent successfully');
+      if (channel === 'phone') {
+        if (!isMsg91Configured()) {
+          toast.error('MSG91 phone OTP is not configured yet');
+          return;
+        }
+
+        // Move to OTP screen immediately so the UI never looks frozen.
+        setSending(true);
+        setStep('otp');
+        setStatusText('Sending SMS OTP…');
+        const toastId = toast.loading('Sending SMS OTP…');
+
+        try {
+          await msg91SendOtp(payload.phone);
+          setResendIn(30);
+          setStatusText('OTP sent — check your SMS');
+          toast.success('OTP sent to your phone', { id: toastId });
+        } catch (err) {
+          // Stay on OTP screen so the user can retry via Resend.
+          setResendIn(0);
+          setStatusText('Could not send OTP. Tap Resend to try again.');
+          toast.error(err?.message || 'Failed to send OTP', { id: toastId });
+        } finally {
+          setSending(false);
+          setTimeout(() => setStatusText(''), 4000);
+        }
+        return;
+      }
+
+      setSending(true);
+      setStatusText('Sending email OTP…');
+      const toastId = toast.loading('Sending email OTP…');
+      try {
+        await requestOtp(payload);
+        setStep('otp');
+        setResendIn(60);
+        setStatusText('OTP sent — check your inbox');
+        toast.success('OTP sent successfully', { id: toastId });
+      } catch (err) {
+        toast.error(err?.response?.data?.message || err?.message || 'Failed to send OTP', {
+          id: toastId,
+        });
+      } finally {
+        setSending(false);
+        setTimeout(() => setStatusText(''), 4000);
+      }
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to send OTP');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to send OTP');
+      setSending(false);
     }
   };
 
   const handleVerify = async (e) => {
     e.preventDefault();
     try {
-      const data = await loginWithOtp({
-        ...contactPayload(),
-        otp: otp.trim(),
-      });
-
-      if (data.isNewUser) {
-        setSignupToken(data.signupToken);
-        setStep('details');
-        toast.success('OTP verified — complete your profile');
-        return;
+      setBusy(true);
+      setStatusText('Verifying OTP…');
+      const toastId = toast.loading('Verifying OTP…');
+      let data;
+      if (channel === 'phone') {
+        const accessToken = await msg91VerifyOtp(otp.trim());
+        setStatusText('Signing you in…');
+        data = await loginWithMsg91({
+          accessToken,
+          phone: phone.replace(/\D/g, '').slice(-10),
+        });
+      } else {
+        data = await loginWithOtp({
+          ...contactPayload(),
+          otp: otp.trim(),
+        });
       }
-
-      toast.success(`Welcome back${data.customer?.name ? `, ${data.customer.name}` : ''}!`);
-      navigate(returnUrl, { replace: true });
+      toast.dismiss(toastId);
+      handleAuthSuccess(data);
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Invalid OTP');
+      toast.error(err?.response?.data?.message || err?.message || 'Invalid OTP');
+    } finally {
+      setBusy(false);
+      setStatusText('');
+    }
+  };
+
+  const handleResendOtp = async () => {
+    const toastId = toast.loading(channel === 'phone' ? 'Resending SMS OTP…' : 'Resending email OTP…');
+    try {
+      setSending(true);
+      setStatusText(channel === 'phone' ? 'Resending SMS OTP…' : 'Resending email OTP…');
+      if (channel === 'phone') {
+        // If the first send failed, lastReqId may be empty — fall back to a fresh send.
+        try {
+          await msg91RetryOtp();
+        } catch {
+          await msg91SendOtp(phone.replace(/\D/g, '').slice(-10));
+        }
+      } else {
+        await requestOtp(contactPayload());
+      }
+      setResendIn(30);
+      toast.success('OTP resent successfully', { id: toastId });
+      setStatusText('OTP resent — check your messages');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to resend OTP', {
+        id: toastId,
+      });
+      setStatusText('Could not resend. Please try again.');
+    } finally {
+      setSending(false);
+      setTimeout(() => setStatusText(''), 4000);
     }
   };
 
@@ -145,12 +245,13 @@ const Login = () => {
   const goBackToInput = () => {
     setStep('input');
     setOtp('');
-    setDemoOtp('');
     setSignupToken('');
     setName('');
     setExtraEmail('');
     setExtraPhone('');
   };
+
+  const otpLength = channel === 'phone' ? 4 : 6;
 
   const masked =
     channel === 'phone'
@@ -159,7 +260,10 @@ const Login = () => {
 
   const titles = {
     input: { h: 'Login or Signup', p: 'Verify with phone or email to continue' },
-    otp: { h: 'Verify OTP', p: `Enter the 6-digit OTP sent to ${masked}` },
+    otp: {
+      h: 'Verify OTP',
+      p: `Enter the ${otpLength}-digit OTP sent to ${masked}`,
+    },
     details: { h: 'Complete your profile', p: 'Tell us a bit about yourself to finish signup' },
   };
 
@@ -279,6 +383,11 @@ const Login = () => {
               </div>
 
               <div className="p-6 sm:p-8">
+                {loginRequired && step === 'input' && (
+                  <div className="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+                    Please login to access this page. Your saved contact details will be used securely.
+                  </div>
+                )}
                 <AnimatePresence mode="wait">
                   {step === 'input' && (
                     <motion.div
@@ -290,7 +399,10 @@ const Login = () => {
                       <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl bg-gray-100 p-1">
                         <button
                           type="button"
-                          onClick={() => setChannel('phone')}
+                          onClick={() => {
+                            setChannel('phone');
+                            setOtp('');
+                          }}
                           className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${
                             channel === 'phone'
                               ? 'bg-white text-primary-600 shadow-sm'
@@ -301,7 +413,10 @@ const Login = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => setChannel('email')}
+                          onClick={() => {
+                            setChannel('email');
+                            setOtp('');
+                          }}
                           className={`flex items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold transition ${
                             channel === 'email'
                               ? 'bg-white text-primary-600 shadow-sm'
@@ -333,6 +448,8 @@ const Login = () => {
                                 required
                               />
                             </div>
+                            {/* MSG91 captcha mounts here when exposeMethods + captcha is enabled */}
+                            <div id="myduke-msg91-captcha" className="mt-3 flex min-h-0 justify-center" />
                           </div>
                         ) : (
                           <div>
@@ -355,11 +472,14 @@ const Login = () => {
 
                         <button
                           type="submit"
-                          disabled={loading}
+                          disabled={loading || busy}
                           className="btn-gradient w-full rounded-xl py-3.5 font-semibold text-white shadow-glow disabled:opacity-60"
                         >
-                          {loading ? 'Sending OTP...' : 'Get OTP'}
+                          {loading || busy ? 'Sending OTP...' : 'Get OTP'}
                         </button>
+                        {statusText && step === 'input' && (
+                          <p className="text-center text-xs text-primary-600 animate-pulse">{statusText}</p>
+                        )}
                       </form>
                     </motion.div>
                   )}
@@ -379,25 +499,18 @@ const Login = () => {
                         <FiArrowLeft /> Change {channel === 'phone' ? 'number' : 'email'}
                       </button>
 
-                      {demoOtp && (
-                        <div className="mb-4 rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-                          <strong>Demo OTP:</strong> {demoOtp}
-                          <span className="mt-0.5 block text-xs text-amber-600">
-                            OTP is stored in DB only (no SMS/email gateway in demo).
-                          </span>
-                        </div>
-                      )}
-
                       <form onSubmit={handleVerify} className="space-y-4">
                         <div>
                           <label className="mb-1.5 block text-sm font-medium text-gray-700">Enter OTP</label>
                           <input
                             type="text"
                             inputMode="numeric"
-                            maxLength={6}
-                            placeholder="6-digit OTP"
+                            maxLength={otpLength}
+                            placeholder={`${otpLength}-digit OTP`}
                             value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                            onChange={(e) =>
+                              setOtp(e.target.value.replace(/\D/g, '').slice(0, otpLength))
+                            }
                             className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-2xl font-semibold tracking-[0.4em] focus:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-100"
                             required
                           />
@@ -405,11 +518,15 @@ const Login = () => {
 
                         <button
                           type="submit"
-                          disabled={loading || otp.length !== 6}
+                          disabled={loading || busy || sending || otp.length !== otpLength}
                           className="btn-gradient w-full rounded-xl py-3.5 font-semibold text-white shadow-glow disabled:opacity-60"
                         >
-                          {loading ? 'Verifying...' : 'Verify OTP'}
+                          {busy ? 'Verifying...' : sending ? 'Sending OTP…' : 'Verify OTP'}
                         </button>
+
+                        {statusText && (
+                          <p className="text-center text-xs text-primary-600 animate-pulse">{statusText}</p>
+                        )}
 
                         <p className="text-center text-sm text-gray-500">
                           Didn&apos;t get OTP?{' '}
@@ -418,10 +535,11 @@ const Login = () => {
                           ) : (
                             <button
                               type="button"
-                              onClick={handleSendOtp}
-                              className="font-semibold text-primary-600 hover:underline"
+                              onClick={handleResendOtp}
+                              disabled={sending || busy}
+                              className="font-semibold text-primary-600 hover:underline disabled:opacity-60"
                             >
-                              Resend OTP
+                              {sending ? 'Sending…' : 'Resend OTP'}
                             </button>
                           )}
                         </p>

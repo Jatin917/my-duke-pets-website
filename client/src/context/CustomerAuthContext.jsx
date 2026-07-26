@@ -4,6 +4,7 @@ import {
   getCustomerProfile,
   sendOtp,
   verifyOtp,
+  verifyMsg91,
   completeSignup,
 } from '../services/customerAuthService';
 
@@ -71,6 +72,19 @@ export const CustomerAuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithMsg91 = async ({ accessToken, phone }) => {
+    setLoading(true);
+    try {
+      const data = await verifyMsg91({ accessToken, phone });
+      if (!data.isNewUser && data.token) {
+        persistSession(data.token, data.customer, setCustomer);
+      }
+      return data;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const finishSignup = async ({ signupToken, name, email, phone }) => {
     setLoading(true);
     try {
@@ -97,6 +111,7 @@ export const CustomerAuthProvider = ({ children }) => {
         customer,
         requestOtp,
         loginWithOtp,
+        loginWithMsg91,
         finishSignup,
         logout,
         loading,

@@ -9,13 +9,13 @@ import {
   getDashboardStats,
   getGoogleSheet,
 } from '../controllers/enquiryController.js';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect, protectCustomer } from '../middleware/authMiddleware.js';
 import { enquiryValidator } from '../validators/enquiryValidator.js';
 import validate from '../validators/validate.js';
 
 const router = express.Router();
 
-router.post('/', enquiryValidator, validate, createEnquiry);
+router.post('/', protectCustomer, enquiryValidator, validate, createEnquiry);
 router.get('/', protect, getEnquiries);
 router.get('/export/excel', protect, exportEnquiries);
 router.get('/stats/dashboard', protect, getDashboardStats);

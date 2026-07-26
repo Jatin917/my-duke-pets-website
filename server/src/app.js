@@ -15,6 +15,7 @@ import enquiryRoutes from './routes/enquiryRoutes.js';
 import customerAuthRoutes from './routes/customerAuthRoutes.js';
 import donateRoutes from './routes/donateRoutes.js';
 import sellRoutes from './routes/sellRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -79,6 +80,7 @@ app.use('/api/pets', petRoutes);
 app.use('/api/enquiry', enquiryRoutes);
 app.use('/api/donate', donateRoutes);
 app.use('/api/sell', sellRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

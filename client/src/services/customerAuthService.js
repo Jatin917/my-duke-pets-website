@@ -15,6 +15,11 @@ export const verifyOtp = async ({ channel, email, phone, otp }) => {
   return data;
 };
 
+export const verifyMsg91 = async ({ accessToken, phone }) => {
+  const { data } = await api.post('/customer/auth/verify-msg91', { accessToken, phone });
+  return data;
+};
+
 export const completeSignup = async ({ signupToken, name, email, phone }) => {
   const { data } = await api.post('/customer/auth/complete-signup', {
     signupToken,

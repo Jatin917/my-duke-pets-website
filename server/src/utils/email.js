@@ -1,9 +1,11 @@
+import nodemailer from 'nodemailer';
 import { Resend } from 'resend';
 
 const SITE_NAME = process.env.SITE_NAME || 'My Duke';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 let resendClient = null;
+let smtpTransport = null;
 
 const getResend = () => {
   if (!process.env.RESEND_API_KEY) return null;
@@ -11,8 +13,32 @@ const getResend = () => {
   return resendClient;
 };
 
+const smtpConfigured = () =>
+  Boolean(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+
+const getSmtpTransport = () => {
+  if (!smtpConfigured()) return null;
+  if (!smtpTransport) {
+    const port = Number(process.env.SMTP_PORT || 465);
+    smtpTransport = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.hostinger.com',
+      port,
+      secure: process.env.SMTP_SECURE
+        ? process.env.SMTP_SECURE === 'true'
+        : port === 465,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASSWORD,
+      },
+    });
+  }
+  return smtpTransport;
+};
+
 const fromAddress = () =>
-  process.env.RESEND_FROM_EMAIL || `${SITE_NAME} <onboarding@resend.dev>`;
+  process.env.SMTP_FROM ||
+  process.env.RESEND_FROM_EMAIL ||
+  `${SITE_NAME} <${process.env.SMTP_USER || 'onboarding@resend.dev'}>`;
 
 const adminNotifyEmail = () =>
   process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '';
@@ -50,36 +76,63 @@ const layout = (title, bodyHtml) => `
 </html>
 `;
 
+const sendViaSmtp = async ({ to, subject, html, text }) => {
+  const transport = getSmtpTransport();
+  if (!transport) return null;
+
+  const info = await transport.sendMail({
+    from: fromAddress(),
+    to: Array.isArray(to) ? to.join(', ') : to,
+    subject,
+    html,
+    text,
+  });
+
+  console.log('[email] SMTP sent:', subject, '→', to, info.messageId || '');
+  return { success: true, data: info, provider: 'smtp' };
+};
+
+const sendViaResend = async ({ to, subject, html, text }) => {
+  const resend = getResend();
+  if (!resend) return null;
+
+  const { data, error } = await resend.emails.send({
+    from: fromAddress(),
+    to: Array.isArray(to) ? to : [to],
+    subject,
+    html,
+    text,
+  });
+
+  if (error) {
+    console.error('[email] Resend error:', error);
+    return { success: false, error, provider: 'resend' };
+  }
+
+  console.log('[email] Resend sent:', subject, '→', to, data?.id || '');
+  return { success: true, data, provider: 'resend' };
+};
+
 /**
- * Low-level send. Never throws — logs failures so API flows stay resilient.
+ * Low-level send. Prefers Hostinger SMTP when configured, else Resend.
+ * Never throws — logs failures so API flows stay resilient.
  */
 export const sendEmail = async ({ to, subject, html, text }) => {
-  const resend = getResend();
-  if (!resend) {
-    console.warn('[email] RESEND_API_KEY missing — skipped:', subject);
-    return { skipped: true };
-  }
   if (!to) {
     console.warn('[email] No recipient — skipped:', subject);
     return { skipped: true };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: fromAddress(),
-      to: Array.isArray(to) ? to : [to],
-      subject,
-      html,
-      text,
-    });
-
-    if (error) {
-      console.error('[email] Resend error:', error);
-      return { success: false, error };
+    if (smtpConfigured()) {
+      return await sendViaSmtp({ to, subject, html, text });
     }
 
-    console.log('[email] Sent:', subject, '→', to, data?.id || '');
-    return { success: true, data };
+    const resendResult = await sendViaResend({ to, subject, html, text });
+    if (resendResult) return resendResult;
+
+    console.warn('[email] No SMTP or RESEND_API_KEY configured — skipped:', subject);
+    return { skipped: true };
   } catch (err) {
     console.error('[email] Failed:', err.message);
     return { success: false, error: err.message };
@@ -273,16 +326,225 @@ export const sendSellRequestAdminEmail = async ({ request }) => {
   });
 };
 
-export const sendSellStatusEmail = async ({ request }) =>
-  sendEmail({
+export const sendSellStatusEmail = async ({ request }) => {
+  const rejected = String(request.status || '').toLowerCase() === 'rejected';
+  return sendEmail({
     to: request.sellerEmail,
-    subject: `Sell request update: ${request.name} is ${request.status}`,
+    subject: rejected
+      ? `Listing update: ${request.name} was not approved`
+      : `Sell request update: ${request.name} is ${request.status}`,
     html: layout(
-      'Sell request updated',
+      rejected ? 'Listing not approved' : 'Sell request updated',
+      rejected
+        ? `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${request.sellerName}, unfortunately your listing request for <strong>${request.name}</strong> was <strong>not approved</strong>.</p>
+      ${request.adminNotes ? `<p style="margin:0 0 12px;font-size:14px;color:#6b7280;">Reason: ${request.adminNotes}</p>` : ''}
+      <p style="margin:0;font-size:13px;color:#9ca3af;">You can update the details and submit again, or contact us for help.</p>
       `
+        : `
       <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${request.sellerName}, your listing request for <strong>${request.name}</strong> is now <strong>${request.status}</strong>.</p>
       ${request.adminNotes ? `<p style="margin:0;font-size:13px;color:#6b7280;">Note: ${request.adminNotes}</p>` : ''}
       `
     ),
-    text: `Your sell request for ${request.name} is now ${request.status}.`,
+    text: rejected
+      ? `Your listing request for ${request.name} was not approved.${request.adminNotes ? ` Reason: ${request.adminNotes}` : ''}`
+      : `Your sell request for ${request.name} is now ${request.status}.`,
   });
+};
+
+export const sendContactConfirmationEmail = async ({ form }) =>
+  sendEmail({
+    to: form.email,
+    subject: `We received your message — ${SITE_NAME}`,
+    html: layout(
+      'Message received',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${form.name}, thanks for contacting ${SITE_NAME}. We’ve received your message and will reply shortly.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Subject</td><td style="padding:6px 0;">${form.subject || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
+      </table>
+      `
+    ),
+    text: `Hi ${form.name}, we received your message on ${SITE_NAME}. We'll get back to you soon.`,
+  });
+
+export const sendContactAdminEmail = async ({ form }) => {
+  const to = adminNotifyEmail();
+  if (!to) return { skipped: true };
+  return sendEmail({
+    to,
+    subject: `Contact form: ${form.subject || 'New message'} — ${form.name}`,
+    html: layout(
+      'New contact message',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Someone submitted the Contact Us form.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Name</td><td style="padding:6px 0;">${form.name}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${form.email}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Subject</td><td style="padding:6px 0;">${form.subject || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Message</td><td style="padding:6px 0;">${form.message || '-'}</td></tr>
+      </table>
+      `
+    ),
+    text: `Contact from ${form.name} (${form.email}): ${form.subject || ''} — ${form.message || ''}`,
+  });
+};
+
+export const sendHelpEnquiryConfirmationEmail = async ({ form }) =>
+  sendEmail({
+    to: form.email,
+    subject: `We received your enquiry — ${SITE_NAME}`,
+    html: layout(
+      'Enquiry received',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${form.name}, thanks for reaching out. Our team will contact you within 24 hours.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Intent</td><td style="padding:6px 0;">${form.intent || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Pet type</td><td style="padding:6px 0;">${form.petType || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">City</td><td style="padding:6px 0;">${form.city || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
+      </table>
+      `
+    ),
+    text: `Hi ${form.name}, we received your ${form.intent || 'enquiry'} on ${SITE_NAME}.`,
+  });
+
+export const sendHelpEnquiryAdminEmail = async ({ form }) => {
+  const to = adminNotifyEmail();
+  if (!to) return { skipped: true };
+  return sendEmail({
+    to,
+    subject: `Help enquiry: ${form.intent || 'General'} — ${form.name}`,
+    html: layout(
+      'New help / enquiries form',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Someone submitted the Help / Enquiries form.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Intent</td><td style="padding:6px 0;">${form.intent || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Name</td><td style="padding:6px 0;">${form.name}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${form.email}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Pet type</td><td style="padding:6px 0;">${form.petType || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">City</td><td style="padding:6px 0;">${form.city || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Message</td><td style="padding:6px 0;">${form.message || '-'}</td></tr>
+      </table>
+      `
+    ),
+    text: `Help enquiry from ${form.name} (${form.intent}): ${form.message || ''}`,
+  });
+};
+
+export const sendRegistrationAdminEmail = async ({ customer }) => {
+  const to = adminNotifyEmail();
+  if (!to) return { skipped: true };
+  return sendEmail({
+    to,
+    subject: `New user registered — ${customer.name || customer.email}`,
+    html: layout(
+      'New user registration',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">A new customer account was created on ${SITE_NAME}.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Name</td><td style="padding:6px 0;">${customer.name || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${customer.email || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${customer.phone || '-'}</td></tr>
+      </table>
+      `
+    ),
+    text: `New user: ${customer.name || '-'} / ${customer.email || '-'} / ${customer.phone || '-'}`,
+  });
+};
+
+export const sendOtpFailureAdminEmail = async ({ email, error }) => {
+  const to = adminNotifyEmail();
+  if (!to) return { skipped: true };
+  return sendEmail({
+    to,
+    subject: `OTP email failed — ${email}`,
+    html: layout(
+      'OTP delivery failed',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">An OTP email could not be delivered.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Recipient</td><td style="padding:6px 0;">${email}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Error</td><td style="padding:6px 0;">${error || 'Unknown'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Time</td><td style="padding:6px 0;">${new Date().toISOString()}</td></tr>
+      </table>
+      `
+    ),
+    text: `OTP email failed for ${email}: ${error || 'Unknown'}`,
+  });
+};
+
+export const sendSubmissionApologyEmail = async ({ email, name, context }) =>
+  sendEmail({
+    to: email,
+    subject: `We received your ${context || 'request'} — delivery note from ${SITE_NAME}`,
+    html: layout(
+      'We have your request',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi${name ? ` ${name}` : ''}, we successfully received your <strong>${context || 'request'}</strong> on ${SITE_NAME}.</p>
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Our confirmation email had a delivery hiccup, but your submission is safe with us and our team will follow up shortly.</p>
+      <p style="margin:0;font-size:13px;color:#9ca3af;">If you need anything sooner, reply to this note or contact us from the website.</p>
+      `
+    ),
+    text: `Hi${name ? ` ${name}` : ''}, we received your ${context || 'request'} on ${SITE_NAME}. Our team will follow up shortly.`,
+  });
+
+export const sendSubmissionFailureAdminEmail = async ({
+  context,
+  userEmail,
+  userName,
+  errorDetail,
+}) => {
+  const to = adminNotifyEmail();
+  if (!to) return { skipped: true };
+  return sendEmail({
+    to,
+    subject: `Email delivery issue — ${context || 'submission'}`,
+    html: layout(
+      'Transactional email failed',
+      `
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">A confirmation email failed after a successful submission.</p>
+      <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+        <tr><td style="padding:6px 0;color:#9ca3af;">Context</td><td style="padding:6px 0;">${context || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">User</td><td style="padding:6px 0;">${userName || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${userEmail || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Detail</td><td style="padding:6px 0;">${errorDetail || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Time</td><td style="padding:6px 0;">${new Date().toISOString()}</td></tr>
+      </table>
+      `
+    ),
+    text: `Email failure after ${context}: ${userEmail} — ${errorDetail || ''}`,
+  });
+};
+
+/** Returns true when any result is an explicit send failure (not skipped). */
+export const hasEmailFailure = (results = []) =>
+  results.some((r) => r && r.success === false);
+
+export const notifyDeliveryFailure = async ({
+  userEmail,
+  userName,
+  context,
+  results = [],
+}) => {
+  const errorDetail = results
+    .filter((r) => r && r.success === false)
+    .map((r) => (typeof r.error === 'string' ? r.error : JSON.stringify(r.error || r)))
+    .join('; ');
+
+  await Promise.all([
+    userEmail
+      ? sendSubmissionApologyEmail({ email: userEmail, name: userName, context })
+      : Promise.resolve({ skipped: true }),
+    sendSubmissionFailureAdminEmail({
+      context,
+      userEmail,
+      userName,
+      errorDetail: errorDetail || 'Unknown delivery error',
+    }),
+  ]);
+};

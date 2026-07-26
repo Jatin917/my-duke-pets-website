@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import DonateSettings from '../models/DonateSettings.js';
-import { sendDonationThankYouEmail, sendDonationAdminEmail } from '../utils/email.js';
+import { sendDonationThankYouEmail, sendDonationAdminEmail, hasEmailFailure, notifyDeliveryFailure } from '../utils/email.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const uploadsRoot = path.join(__dirname, '..', '..', 'uploads');
@@ -136,10 +136,19 @@ export const acknowledgeDonation = asyncHandler(async (req, res) => {
     throw new Error('Please provide a valid donation amount');
   }
 
-  await Promise.all([
+  const emailResults = await Promise.all([
     sendDonationThankYouEmail({ email, name, amount }),
     sendDonationAdminEmail({ email, name, amount, note }),
   ]);
+
+  if (hasEmailFailure(emailResults)) {
+    await notifyDeliveryFailure({
+      userEmail: email,
+      userName: name,
+      context: 'donation acknowledgment',
+      results: emailResults,
+    }).catch(() => {});
+  }
 
   res.json({
     success: true,

@@ -23,11 +23,7 @@ const EnquiryModal = ({ pet, onClose }) => {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
-    defaultValues: {
-      name: customer?.name || '',
-      email: customer?.email || '',
-      phone: customer?.phone || '',
-    },
+    defaultValues: {},
   });
 
   const loginHref = `/login?return_url=${encodeURIComponent(`/pets/${pet.slug || pet._id}`)}`;
@@ -135,46 +131,27 @@ const EnquiryModal = ({ pet, onClose }) => {
                 )}
               </div>
 
-              {!isAuthenticated && (
-                <p className="text-xs text-amber-700 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-4">
-                  Login to unlock pricing for {pet.name}. You can still submit an enquiry below.
-                </p>
-              )}
-
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <input
-                      placeholder="Full Name *"
-                      className={inputClass}
-                      {...register('name', { required: 'Full name is required' })}
-                    />
-                    {errors.name && <p className={errorClass}>{errors.name.message}</p>}
-                  </div>
-                  <div>
-                    <input
-                      placeholder="Phone Number *"
-                      className={inputClass}
-                      {...register('phone', {
-                        required: 'Phone number is required',
-                        pattern: { value: /^[0-9+\-\s]{7,15}$/, message: 'Enter a valid phone number' },
-                      })}
-                    />
-                    {errors.phone && <p className={errorClass}>{errors.phone.message}</p>}
-                  </div>
+              {!isAuthenticated ? (
+                <div className="rounded-2xl border border-primary-100 bg-primary-50 p-5 text-center">
+                  <FiLock className="mx-auto mb-2 text-2xl text-primary-600" />
+                  <p className="font-semibold text-gray-900">Please login to submit an enquiry</p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    We’ll securely use the contact details saved in your account.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleViewPrice}
+                    className="btn-gradient mt-4 rounded-xl px-6 py-3 font-semibold text-white"
+                  >
+                    Login to Continue
+                  </button>
                 </div>
-
-                <div>
-                  <input
-                    placeholder="Email Address *"
-                    type="email"
-                    className={inputClass}
-                    {...register('email', {
-                      required: 'Email is required',
-                      pattern: { value: /^\S+@\S+\.\S+$/, message: 'Enter a valid email' },
-                    })}
-                  />
-                  {errors.email && <p className={errorClass}>{errors.email.message}</p>}
+              ) : (
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                <div className="rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-gray-600">
+                  Enquiring as <strong className="text-gray-900">{customer?.name || 'Pet Parent'}</strong>
+                  {customer?.email ? ` · ${customer.email}` : ''}
+                  {customer?.phone ? ` · +91 ${customer.phone}` : ''}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,6 +202,7 @@ const EnquiryModal = ({ pet, onClose }) => {
                   {isSubmitting ? 'Submitting...' : 'Submit Enquiry'}
                 </button>
               </form>
+              )}
             </div>
           )}
         </motion.div>

@@ -6,6 +6,8 @@ import {
   sendSellRequestConfirmationEmail,
   sendSellRequestAdminEmail,
   sendSellStatusEmail,
+  hasEmailFailure,
+  notifyDeliveryFailure,
 } from '../utils/email.js';
 
 const mapImages = (files = []) => files.map((f) => `/uploads/sell/${f.filename}`);
@@ -102,10 +104,19 @@ export const createSellRequest = asyncHandler(async (req, res) => {
     customer: req.body.customerId || null,
   });
 
-  Promise.all([
+  const emailResults = await Promise.all([
     sendSellRequestConfirmationEmail({ request }),
     sendSellRequestAdminEmail({ request }),
-  ]).catch(() => {});
+  ]);
+
+  if (hasEmailFailure(emailResults)) {
+    await notifyDeliveryFailure({
+      userEmail: request.sellerEmail,
+      userName: request.sellerName,
+      context: 'pet listing request',
+      results: emailResults,
+    }).catch(() => {});
+  }
 
   res.status(201).json({
     success: true,

@@ -13,17 +13,18 @@ export const sendOtpValidator = [
 ];
 
 export const verifyOtpValidator = [
-  body('channel').isIn(['email', 'phone']).withMessage('Channel must be email or phone'),
+  body('channel').isIn(['email']).withMessage('Email OTP verification only — use MSG91 for phone'),
   body('otp')
     .trim()
     .matches(/^[0-9]{6}$/)
     .withMessage('OTP must be a 6-digit number'),
-  body('email')
-    .if(body('channel').equals('email'))
-    .isEmail()
-    .withMessage('Please provide a valid email'),
+  body('email').isEmail().withMessage('Please provide a valid email'),
+];
+
+export const verifyMsg91Validator = [
+  body('accessToken').trim().notEmpty().withMessage('MSG91 access token is required'),
   body('phone')
-    .if(body('channel').equals('phone'))
+    .optional({ checkFalsy: true })
     .matches(/^[0-9]{10}$/)
     .withMessage('Please provide a valid 10-digit phone number'),
 ];

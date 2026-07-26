@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
 import { FiClock, FiMail, FiMapPin, FiPhone, FiSend } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
+import { useCustomerAuth } from '../context/CustomerAuthContext';
+import { submitContactForm } from '../services/contactService';
 import {
   FACEBOOK_URL,
   INSTAGRAM_URL,
@@ -36,10 +38,8 @@ const socialLinks = [
 ];
 
 const Contact = () => {
+  const { customer, isAuthenticated } = useCustomerAuth();
   const [form, setForm] = useState({
-    name: '',
-    phone: '',
-    email: '',
     subject: '',
     message: '',
   });
@@ -47,15 +47,23 @@ const Contact = () => {
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSending(true);
-    setTimeout(() => {
-      toast.success('Message sent! We will get back to you soon.');
-      setForm({ name: '', phone: '', email: '', subject: '', message: '' });
+    try {
+      const data = await submitContactForm(form);
+      toast.success(data.message || 'Message sent! We will get back to you soon.');
+      setForm({ subject: '', message: '' });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not send message. Please try again.');
+    } finally {
       setSending(false);
-    }, 900);
+    }
   };
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login?return_url=/contact&reason=required" replace />;
+  }
 
   return (
     <>
@@ -165,36 +173,18 @@ const Contact = () => {
               className="rounded-3xl bg-white border border-gray-100 shadow-soft p-6 sm:p-8"
             >
               <h3 className="font-display text-xl font-bold text-gray-900 mb-6">Send a Message</h3>
+              <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-gray-600">
+                Sending as <strong className="text-gray-900">{customer?.name || 'Pet Parent'}</strong>
+                {customer?.email ? ` · ${customer.email}` : ''}
+                {customer?.phone ? ` · +91 ${customer.phone}` : ''}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => updateField('name', event.target.value)}
-                  placeholder="Full Name"
-                  className={inputClass}
-                />
-                <input
-                  required
-                  type="tel"
-                  value={form.phone}
-                  onChange={(event) => updateField('phone', event.target.value)}
-                  placeholder="Phone Number"
-                  className={inputClass}
-                />
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => updateField('email', event.target.value)}
-                  placeholder="Email Address"
-                  className={inputClass}
-                />
                 <input
                   required
                   value={form.subject}
                   onChange={(event) => updateField('subject', event.target.value)}
                   placeholder="Subject"
-                  className={inputClass}
+                  className={`${inputClass} sm:col-span-2`}
                 />
                 <textarea
                   required

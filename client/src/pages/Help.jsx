@@ -1,9 +1,12 @@
 import { useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FiCheck, FiSend } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
+import { useCustomerAuth } from '../context/CustomerAuthContext';
+import { submitHelpEnquiry } from '../services/contactService';
 
 const steps = [
   {
@@ -54,11 +57,9 @@ const inputClass =
   'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100';
 
 const Help = () => {
+  const { customer, isAuthenticated } = useCustomerAuth();
   const [form, setForm] = useState({
     intent: 'Buy a Pet',
-    name: '',
-    phone: '',
-    email: '',
     petType: '',
     city: '',
     message: '',
@@ -67,23 +68,28 @@ const Help = () => {
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     setSending(true);
-    setTimeout(() => {
-      toast.success('Enquiry submitted. Our team will contact you soon.');
+    try {
+      const data = await submitHelpEnquiry(form);
+      toast.success(data.message || 'Enquiry submitted. Our team will contact you soon.');
       setForm({
         intent: 'Buy a Pet',
-        name: '',
-        phone: '',
-        email: '',
         petType: '',
         city: '',
         message: '',
       });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Could not submit enquiry. Please try again.');
+    } finally {
       setSending(false);
-    }, 900);
+    }
   };
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login?return_url=/help&reason=required" replace />;
+  }
 
   return (
     <>
@@ -126,6 +132,11 @@ const Help = () => {
               className="rounded-3xl bg-white border border-gray-100 shadow-soft p-6 sm:p-8"
             >
               <h3 className="font-display text-xl font-bold text-gray-900 mb-6">Submit an Enquiry</h3>
+              <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-gray-600">
+                Enquiring as <strong className="text-gray-900">{customer?.name || 'Pet Parent'}</strong>
+                {customer?.email ? ` · ${customer.email}` : ''}
+                {customer?.phone ? ` · +91 ${customer.phone}` : ''}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <label className="sm:col-span-2 text-sm font-medium text-gray-700">
                   I am looking to
@@ -139,29 +150,6 @@ const Help = () => {
                     <option>General Enquiry</option>
                   </select>
                 </label>
-                <input
-                  required
-                  value={form.name}
-                  onChange={(event) => updateField('name', event.target.value)}
-                  placeholder="Full Name"
-                  className={inputClass}
-                />
-                <input
-                  required
-                  type="tel"
-                  value={form.phone}
-                  onChange={(event) => updateField('phone', event.target.value)}
-                  placeholder="Phone Number"
-                  className={inputClass}
-                />
-                <input
-                  required
-                  type="email"
-                  value={form.email}
-                  onChange={(event) => updateField('email', event.target.value)}
-                  placeholder="Email Address"
-                  className={inputClass}
-                />
                 <select
                   required
                   value={form.petType}

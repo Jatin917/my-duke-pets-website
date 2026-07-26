@@ -3,7 +3,14 @@ import jwt from 'jsonwebtoken';
 import Customer from '../models/Customer.js';
 import Otp from '../models/Otp.js';
 import generateToken from '../utils/generateToken.js';
-import { sendOtpEmail, sendWelcomeEmail, sendLoginAlertEmail } from '../utils/email.js';
+import {
+  sendOtpEmail,
+  sendWelcomeEmail,
+  sendLoginAlertEmail,
+  sendOtpFailureAdminEmail,
+  sendRegistrationAdminEmail,
+} from '../utils/email.js';
+import { normalizeIndianMobile, verifyMsg91AccessToken } from '../utils/msg91.js';
 
 const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_ATTEMPTS = 5;
@@ -13,7 +20,7 @@ const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000)
 
 const normalizeIdentifier = (channel, email, phone) => {
   if (channel === 'email') return (email || '').trim().toLowerCase();
-  return (phone || '').replace(/\D/g, '').slice(-10);
+  return normalizeIndianMobile(phone);
 };
 
 const formatCustomer = (customer) => ({
@@ -36,7 +43,42 @@ const verifySignupToken = (token) => {
   return decoded;
 };
 
-// @desc    Send OTP to email or phone (stored in DB only — no SMS/email gateway)
+const finishVerifiedLogin = async (res, channel, identifier) => {
+  const query = channel === 'email' ? { email: identifier } : { phone: identifier };
+  const customer = await Customer.findOne(query);
+
+  if (customer) {
+    customer.isVerified = true;
+    customer.lastLogin = new Date();
+    await customer.save();
+
+    if (customer.email) {
+      sendLoginAlertEmail({ email: customer.email, name: customer.name }).catch(() => {});
+    }
+
+    return res.json({
+      success: true,
+      isNewUser: false,
+      message: 'Login successful',
+      token: generateToken(customer._id, 'customer'),
+      customer: formatCustomer(customer),
+    });
+  }
+
+  return res.json({
+    success: true,
+    isNewUser: true,
+    message: 'OTP verified. Please complete your profile.',
+    signupToken: createSignupToken(channel, identifier),
+    channel,
+    identifier:
+      channel === 'email'
+        ? identifier.replace(/(.{2}).+(@.+)/, '$1***$2')
+        : `******${identifier.slice(-4)}`,
+  });
+};
+
+// @desc    Send OTP via email (phone OTP is handled by MSG91 widget on the client)
 // @route   POST /api/customer/auth/send-otp
 // @access  Public
 export const sendOtp = asyncHandler(async (req, res) => {
@@ -47,16 +89,16 @@ export const sendOtp = asyncHandler(async (req, res) => {
     throw new Error('Channel must be email or phone');
   }
 
+  if (channel === 'phone') {
+    res.status(400);
+    throw new Error('Phone OTP is sent via MSG91 on the login page. Use email OTP here, or verify with MSG91.');
+  }
+
   const identifier = normalizeIdentifier(channel, email, phone);
 
-  if (channel === 'email') {
-    if (!/^\S+@\S+\.\S+$/.test(identifier)) {
-      res.status(400);
-      throw new Error('Please provide a valid email');
-    }
-  } else if (!/^[0-9]{10}$/.test(identifier)) {
+  if (!/^\S+@\S+\.\S+$/.test(identifier)) {
     res.status(400);
-    throw new Error('Please provide a valid 10-digit phone number');
+    throw new Error('Please provide a valid email');
   }
 
   await Otp.updateMany(
@@ -69,50 +111,42 @@ export const sendOtp = asyncHandler(async (req, res) => {
 
   await Otp.create({ channel, identifier, code, expiresAt });
 
-  let emailSent = false;
-  if (channel === 'email') {
-    const result = await sendOtpEmail({ email: identifier, code });
-    emailSent = Boolean(result?.success);
+  const result = await sendOtpEmail({ email: identifier, code });
+  const emailSent = Boolean(result?.success);
+  if (!emailSent) {
+    sendOtpFailureAdminEmail({
+      email: identifier,
+      error:
+        typeof result?.error === 'string'
+          ? result.error
+          : JSON.stringify(result?.error || 'SMTP send failed'),
+    }).catch(() => {});
   }
 
-  const response = {
+  res.json({
     success: true,
-    message:
-      channel === 'email'
-        ? emailSent
-          ? 'OTP sent to your email. Please check your inbox.'
-          : 'OTP generated. Email delivery failed — check server Resend config (OTP still stored in DB).'
-        : 'OTP generated for your phone. (SMS gateway not configured — use demo OTP in development.)',
+    message: emailSent
+      ? 'OTP sent to your email. Please check your inbox.'
+      : 'OTP generated. Email delivery failed — please try again.',
     channel,
-    identifier:
-      channel === 'email'
-        ? identifier.replace(/(.{2}).+(@.+)/, '$1***$2')
-        : `******${identifier.slice(-4)}`,
+    identifier: identifier.replace(/(.{2}).+(@.+)/, '$1***$2'),
     expiresIn: 600,
     emailSent,
-  };
-
-  // Expose OTP in non-production, or when email channel failed to send
-  if (process.env.NODE_ENV !== 'production' || (channel === 'email' && !emailSent) || channel === 'phone') {
-    if (process.env.NODE_ENV !== 'production') {
-      response.otp = code;
-      response.note =
-        channel === 'email' && emailSent
-          ? 'OTP also emailed via Resend. Shown here only in development.'
-          : 'OTP is returned in development for testing.';
-    }
-  }
-
-  res.json(response);
+  });
 });
 
-// @desc    Verify OTP — existing users log in; new users get a signup token
+// @desc    Verify email OTP — existing users log in; new users get a signup token
 // @route   POST /api/customer/auth/verify-otp
 // @access  Public
 export const verifyOtp = asyncHandler(async (req, res) => {
   const { channel, email, phone, otp } = req.body;
 
-  if (!['email', 'phone'].includes(channel)) {
+  if (channel === 'phone') {
+    res.status(400);
+    throw new Error('Phone OTP must be verified via MSG91. Submit the MSG91 access token instead.');
+  }
+
+  if (channel !== 'email') {
     res.status(400);
     throw new Error('Channel must be email or phone');
   }
@@ -155,40 +189,35 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   otpDoc.verified = true;
   await otpDoc.save();
 
-  const query = channel === 'email' ? { email: identifier } : { phone: identifier };
-  const customer = await Customer.findOne(query);
+  return finishVerifiedLogin(res, 'email', identifier);
+});
 
-  // Existing user — login immediately, no profile form
-  if (customer) {
-    customer.isVerified = true;
-    customer.lastLogin = new Date();
-    await customer.save();
+// @desc    Verify MSG91 widget access token (phone OTP)
+// @route   POST /api/customer/auth/verify-msg91
+// @access  Public
+export const verifyMsg91 = asyncHandler(async (req, res) => {
+  const accessToken = (req.body.accessToken || req.body['access-token'] || '').trim();
+  const claimedPhone = normalizeIndianMobile(req.body.phone);
 
-    if (customer.email) {
-      sendLoginAlertEmail({ email: customer.email, name: customer.name }).catch(() => {});
-    }
-
-    return res.json({
-      success: true,
-      isNewUser: false,
-      message: 'Login successful',
-      token: generateToken(customer._id, 'customer'),
-      customer: formatCustomer(customer),
-    });
+  if (!accessToken) {
+    res.status(400);
+    throw new Error('MSG91 access token is required');
   }
 
-  // New user — ask for details next
-  res.json({
-    success: true,
-    isNewUser: true,
-    message: 'OTP verified. Please complete your profile.',
-    signupToken: createSignupToken(channel, identifier),
-    channel,
-    identifier:
-      channel === 'email'
-        ? identifier.replace(/(.{2}).+(@.+)/, '$1***$2')
-        : `******${identifier.slice(-4)}`,
-  });
+  let verified;
+  try {
+    verified = await verifyMsg91AccessToken(accessToken);
+  } catch (err) {
+    res.status(401);
+    throw new Error(err.message || 'MSG91 verification failed');
+  }
+
+  if (claimedPhone && claimedPhone !== verified.phone) {
+    res.status(400);
+    throw new Error('Verified mobile does not match the number you entered');
+  }
+
+  return finishVerifiedLogin(res, 'phone', verified.phone);
 });
 
 // @desc    Complete signup for new customers after OTP verification
@@ -267,7 +296,12 @@ export const completeSignup = asyncHandler(async (req, res) => {
   const customer = await Customer.create(payload);
 
   if (customer.email) {
-    sendWelcomeEmail({ email: customer.email, name: customer.name }).catch(() => {});
+    Promise.all([
+      sendWelcomeEmail({ email: customer.email, name: customer.name }),
+      sendRegistrationAdminEmail({ customer }),
+    ]).catch(() => {});
+  } else {
+    sendRegistrationAdminEmail({ customer }).catch(() => {});
   }
 
   res.status(201).json({
