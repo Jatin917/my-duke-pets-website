@@ -22,9 +22,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
-// Hostinger (and most hosts) sit behind a reverse proxy and send X-Forwarded-For.
-// Required so express-rate-limit can identify clients correctly.
-app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS) || 1);
+// Hostinger sits behind reverse proxy / CDN and sets X-Forwarded-For.
+// Use true so express-rate-limit can read the real client IP (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+const trustProxySetting =
+  process.env.TRUST_PROXY === 'false'
+    ? false
+    : process.env.TRUST_PROXY_HOPS
+      ? Number(process.env.TRUST_PROXY_HOPS)
+      : true;
+app.set('trust proxy', trustProxySetting);
+console.log('[app] trust proxy:', app.get('trust proxy'));
+
+const rateLimitCommon = {
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Avoid throwing if a host still injects X-Forwarded-For unexpectedly.
+  validate: { xForwardedForHeader: false },
+};
 
 /** Strip path/trailing slash so https://site.com/ and https://site.com match. */
 const toOrigin = (value) => {
@@ -111,8 +125,7 @@ if (process.env.NODE_ENV !== 'test') {
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 300,
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...rateLimitCommon,
   message: { success: false, message: 'Too many requests, please try again later.' },
 });
 app.use('/api', apiLimiter);
@@ -120,8 +133,7 @@ app.use('/api', apiLimiter);
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 20,
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...rateLimitCommon,
   message: { success: false, message: 'Too many login attempts, please try again later.' },
 });
 app.use('/api/auth/login', authLimiter);
