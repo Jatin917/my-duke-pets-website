@@ -31,24 +31,20 @@ export const formatEmailError = (err) => {
   return parts.join(' — ') || 'Email send failed';
 };
 
+const SMTP_PORT = 465;
+
 /**
- * Build SMTP options. Port decides encryption:
- * - 465 → implicit TLS (secure: true)
- * - 587 / other → STARTTLS (secure: false)
- * This avoids "wrong version number" when SMTP_SECURE conflicts with the port.
+ * Build SMTP options. Always uses port 465 with SSL/TLS (Hostinger).
  */
 const buildSmtpOptions = () => {
   const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.hostinger.com';
-  const port = Number(cleanEnv(process.env.SMTP_PORT) || 465);
   const user = cleanEnv(process.env.SMTP_USER);
   const pass = cleanEnv(process.env.SMTP_PASSWORD);
-  const secure = port === 465;
 
   return {
     host,
-    port,
-    secure,
-    requireTLS: !secure,
+    port: SMTP_PORT,
+    secure: true,
     auth: { user, pass },
   };
 };
@@ -71,8 +67,6 @@ const adminNotifyEmail = () =>
 /** Verify SMTP credentials on server boot — logs a clear error if misconfigured. */
 export const verifySmtpOnStartup = async () => {
   const rawHost = process.env.SMTP_HOST;
-  const rawPort = process.env.SMTP_PORT;
-  const rawSecure = process.env.SMTP_SECURE;
   const rawUser = process.env.SMTP_USER;
   const rawPass = process.env.SMTP_PASSWORD;
   const rawFrom = process.env.SMTP_FROM;
@@ -81,8 +75,7 @@ export const verifySmtpOnStartup = async () => {
 
   console.log('[email] === SMTP .env check ===');
   console.log('[email] SMTP_HOST     raw:', JSON.stringify(rawHost ?? '(missing)'), '→', opts?.host || '(n/a)');
-  console.log('[email] SMTP_PORT     raw:', JSON.stringify(rawPort ?? '(missing)'), '→', opts?.port ?? '(n/a)');
-  console.log('[email] SMTP_SECURE   raw:', JSON.stringify(rawSecure ?? '(not set — ignored; port decides)'));
+  console.log('[email] SMTP_PORT     fixed:', SMTP_PORT, '(hardcoded — ignores .env SMTP_PORT)');
   console.log('[email] SMTP_USER     raw:', JSON.stringify(rawUser ?? '(missing)'), '→', opts?.auth?.user || '(n/a)');
   console.log(
     '[email] SMTP_PASSWORD set:',
@@ -97,7 +90,7 @@ export const verifySmtpOnStartup = async () => {
   console.log('[email] SMTP_FROM     raw:', JSON.stringify(rawFrom ?? '(missing)'), '→', fromAddress());
   console.log(
     '[email] Effective mode:',
-    opts ? `${opts.host}:${opts.port} ${opts.secure ? 'SSL/TLS' : 'STARTTLS'}` : 'NOT CONFIGURED'
+    opts ? `${opts.host}:${SMTP_PORT} SSL/TLS` : 'NOT CONFIGURED'
   );
   console.log('[email] ========================');
 
@@ -114,8 +107,8 @@ export const verifySmtpOnStartup = async () => {
     console.log(
       '[email] SMTP connecting:',
       opts.host,
-      `port ${opts.port}`,
-      opts.secure ? 'SSL/TLS' : 'STARTTLS',
+      `port ${SMTP_PORT}`,
+      'SSL/TLS',
       opts.auth.user
     );
     await transport.verify();
@@ -123,9 +116,7 @@ export const verifySmtpOnStartup = async () => {
     return true;
   } catch (err) {
     console.error('[email] SMTP verify failed:', formatEmailError(err));
-    console.error(
-      '[email] Tip: port 465 needs SSL/TLS; port 587 needs STARTTLS. Mode is auto-picked from SMTP_PORT.'
-    );
+    console.error('[email] Tip: Hostinger SMTP uses port 465 with SSL/TLS. Check SMTP_USER / SMTP_PASSWORD.');
     return false;
   }
 };
