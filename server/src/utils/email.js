@@ -12,6 +12,9 @@ const smtpConfigured = () =>
 export const formatEmailError = (err) => {
   if (!err) return 'Unknown email error';
   if (typeof err === 'string') return err;
+  if (typeof err === 'object' && err.message && !err.code && !err.response) {
+    return err.message;
+  }
   const parts = [
     err.code,
     err.responseCode ? `SMTP ${err.responseCode}` : null,
@@ -23,7 +26,7 @@ export const formatEmailError = (err) => {
 const getSmtpTransport = () => {
   if (!smtpConfigured()) return null;
   if (!smtpTransport) {
-    const port = Number(465);
+    const port = Number(process.env.SMTP_PORT || 465);
     smtpTransport = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.hostinger.com',
       port,
@@ -34,7 +37,6 @@ const getSmtpTransport = () => {
       },
     });
   }
-  console.log('smtpTransport', smtpTransport, process.env.SMTP_HOST, process.env.SMTP_USER, process.env.SMTP_PASSWORD, process.env.SMTP_SECURE, process.env.SMTP_PORT);
   return smtpTransport;
 };
 
@@ -51,7 +53,19 @@ export const verifySmtpOnStartup = async () => {
     return false;
   }
   try {
-    await getSmtpTransport().verify();
+    const transport = getSmtpTransport();
+    console.log('transport', transport, process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, process.env.SMTP_PASSWORD);
+    if (!transport) {
+      console.warn('[email] SMTP not configured — set SMTP_USER and SMTP_PASSWORD');
+      return false;
+    }
+    console.log(
+      '[email] SMTP connecting:',
+      process.env.SMTP_HOST || 'smtp.hostinger.com',
+      `port ${process.env.SMTP_PORT || 465}`,
+      process.env.SMTP_USER
+    );
+    await transport.verify();
     console.log('[email] SMTP verified:', process.env.SMTP_HOST || 'smtp.hostinger.com');
     return true;
   } catch (err) {
