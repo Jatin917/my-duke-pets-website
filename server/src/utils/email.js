@@ -56,7 +56,7 @@ export const verifySmtpOnStartup = async () => {
   }
   try {
     const transport = getSmtpTransport();
-    console.log('transport', transport, process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, process.env.SMTP_PASSWORD);
+    console.log('transport', process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, process.env.SMTP_PASSWORD);
     if (!transport) {
       console.warn('[email] SMTP not configured — set SMTP_USER and SMTP_PASSWORD');
       return false;
