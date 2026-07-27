@@ -27,16 +27,14 @@ const getSmtpTransport = () => {
     smtpTransport = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.hostinger.com',
       port,
-      secure: process.env.SMTP_SECURE
-        ? process.env.SMTP_SECURE === 'true'
-        : port === 465,
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASSWORD,
       },
     });
   }
-  console.log('smtpTransport', process.env.SMTP_HOST, process.env.SMTP_USER, process.env.SMTP_PASSWORD, process.env.SMTP_SECURE, process.env.SMTP_PORT);
+  console.log('smtpTransport', smtpTransport, process.env.SMTP_HOST, process.env.SMTP_USER, process.env.SMTP_PASSWORD, process.env.SMTP_SECURE, process.env.SMTP_PORT);
   return smtpTransport;
 };
 
