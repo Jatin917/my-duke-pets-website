@@ -6,7 +6,10 @@ import app from './src/app.js';
 
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
+connectDB().then(async () => {
+  const { verifySmtpOnStartup } = await import('./src/utils/email.js');
+  await verifySmtpOnStartup();
+
   app.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });

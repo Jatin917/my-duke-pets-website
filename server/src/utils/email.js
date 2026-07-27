@@ -1,20 +1,24 @@
 import nodemailer from 'nodemailer';
-import { Resend } from 'resend';
 
 const SITE_NAME = process.env.SITE_NAME || 'My Duke';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
-let resendClient = null;
 let smtpTransport = null;
-
-const getResend = () => {
-  if (!process.env.RESEND_API_KEY) return null;
-  if (!resendClient) resendClient = new Resend(process.env.RESEND_API_KEY);
-  return resendClient;
-};
 
 const smtpConfigured = () =>
   Boolean(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+
+/** Human-readable SMTP / nodemailer error for logs and API responses. */
+export const formatEmailError = (err) => {
+  if (!err) return 'Unknown email error';
+  if (typeof err === 'string') return err;
+  const parts = [
+    err.code,
+    err.responseCode ? `SMTP ${err.responseCode}` : null,
+    err.response || err.message,
+  ].filter(Boolean);
+  return parts.join(' — ') || 'Email send failed';
+};
 
 const getSmtpTransport = () => {
   if (!smtpConfigured()) return null;
@@ -36,12 +40,26 @@ const getSmtpTransport = () => {
 };
 
 const fromAddress = () =>
-  process.env.SMTP_FROM ||
-  process.env.RESEND_FROM_EMAIL ||
-  `${SITE_NAME} <${process.env.SMTP_USER || 'onboarding@resend.dev'}>`;
+  process.env.SMTP_FROM || `${SITE_NAME} <${process.env.SMTP_USER}>`;
 
 const adminNotifyEmail = () =>
   process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '';
+
+/** Verify SMTP credentials on server boot — logs a clear error if misconfigured. */
+export const verifySmtpOnStartup = async () => {
+  if (!smtpConfigured()) {
+    console.warn('[email] SMTP not configured — set SMTP_USER and SMTP_PASSWORD');
+    return false;
+  }
+  try {
+    await getSmtpTransport().verify();
+    console.log('[email] SMTP verified:', process.env.SMTP_HOST || 'smtp.hostinger.com');
+    return true;
+  } catch (err) {
+    console.error('[email] SMTP verify failed:', formatEmailError(err));
+    return false;
+  }
+};
 
 const layout = (title, bodyHtml) => `
 <!DOCTYPE html>
@@ -78,7 +96,13 @@ const layout = (title, bodyHtml) => `
 
 const sendViaSmtp = async ({ to, subject, html, text }) => {
   const transport = getSmtpTransport();
-  if (!transport) return null;
+  if (!transport) {
+    return {
+      success: false,
+      error: 'SMTP is not configured (SMTP_USER / SMTP_PASSWORD missing)',
+      provider: 'smtp',
+    };
+  }
 
   const info = await transport.sendMail({
     from: fromAddress(),
@@ -92,50 +116,25 @@ const sendViaSmtp = async ({ to, subject, html, text }) => {
   return { success: true, data: info, provider: 'smtp' };
 };
 
-const sendViaResend = async ({ to, subject, html, text }) => {
-  const resend = getResend();
-  if (!resend) return null;
-
-  const { data, error } = await resend.emails.send({
-    from: fromAddress(),
-    to: Array.isArray(to) ? to : [to],
-    subject,
-    html,
-    text,
-  });
-
-  if (error) {
-    console.error('[email] Resend error:', error);
-    return { success: false, error, provider: 'resend' };
-  }
-
-  console.log('[email] Resend sent:', subject, '→', to, data?.id || '');
-  return { success: true, data, provider: 'resend' };
-};
-
 /**
- * Low-level send. Prefers Hostinger SMTP when configured, else Resend.
- * Never throws — logs failures so API flows stay resilient.
+ * Low-level send — SMTP only. Returns { success, error?, provider }.
+ * Never throws; callers inspect success / use isEmailDeliveryFailure().
  */
 export const sendEmail = async ({ to, subject, html, text }) => {
   if (!to) {
-    console.warn('[email] No recipient — skipped:', subject);
-    return { skipped: true };
+    const error = 'No recipient address';
+    console.warn('[email]', error, '—', subject);
+    return { success: false, skipped: true, error, provider: 'smtp' };
   }
 
   try {
-    if (smtpConfigured()) {
-      return await sendViaSmtp({ to, subject, html, text });
-    }
-
-    const resendResult = await sendViaResend({ to, subject, html, text });
-    if (resendResult) return resendResult;
-
-    console.warn('[email] No SMTP or RESEND_API_KEY configured — skipped:', subject);
-    return { skipped: true };
+    return await sendViaSmtp({ to, subject, html, text });
   } catch (err) {
-    console.error('[email] Failed:', err.message);
-    return { success: false, error: err.message };
+    const error = formatEmailError(err);
+    console.error('[email] SMTP failed:', subject, '→', to);
+    console.error('[email] Detail:', error);
+    if (err.response) console.error('[email] SMTP response:', err.response);
+    return { success: false, error, provider: 'smtp', code: err.code };
   }
 };
 
@@ -521,9 +520,13 @@ export const sendSubmissionFailureAdminEmail = async ({
   });
 };
 
+/** Returns true when an email result indicates delivery did not succeed. */
+export const isEmailDeliveryFailure = (result) =>
+  !result || result.skipped === true || result.success === false;
+
 /** Returns true when any result is an explicit send failure (not skipped). */
 export const hasEmailFailure = (results = []) =>
-  results.some((r) => r && r.success === false);
+  results.some((r) => isEmailDeliveryFailure(r));
 
 export const notifyDeliveryFailure = async ({
   userEmail,

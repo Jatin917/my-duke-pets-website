@@ -9,7 +9,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
-const { sendEmail } = await import('../src/utils/email.js');
+const { sendEmail, verifySmtpOnStartup, formatEmailError } = await import('../src/utils/email.js');
 
 const to =
   process.argv[2] ||
@@ -24,8 +24,14 @@ if (!to) {
 
 console.log('SMTP host:', process.env.SMTP_HOST || 'smtp.hostinger.com');
 console.log('SMTP user:', process.env.SMTP_USER);
-console.log('From:', process.env.SMTP_FROM || process.env.RESEND_FROM_EMAIL);
+console.log('From:', process.env.SMTP_FROM || process.env.SMTP_USER);
 console.log('To:', to);
+
+const verified = await verifySmtpOnStartup();
+if (!verified) {
+  console.error('SMTP verify failed — fix SMTP_USER / SMTP_PASSWORD / SMTP_HOST in server/.env');
+  process.exit(1);
+}
 
 const result = await sendEmail({
   to,
@@ -45,5 +51,10 @@ const result = await sendEmail({
   text: `My Duke SMTP test sent at ${new Date().toISOString()} from ${process.env.SMTP_USER}`,
 });
 
-console.log('Result:', result);
-process.exit(result?.success ? 0 : 1);
+if (result?.success) {
+  console.log('OK — email sent via SMTP');
+  process.exit(0);
+}
+
+console.error('FAILED —', formatEmailError(result?.error));
+process.exit(1);

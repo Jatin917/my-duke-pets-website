@@ -112,26 +112,30 @@ export const sendOtp = asyncHandler(async (req, res) => {
   await Otp.create({ channel, identifier, code, expiresAt });
 
   const result = await sendOtpEmail({ email: identifier, code });
-  const emailSent = Boolean(result?.success);
-  if (!emailSent) {
-    sendOtpFailureAdminEmail({
-      email: identifier,
-      error:
-        typeof result?.error === 'string'
-          ? result.error
-          : JSON.stringify(result?.error || 'SMTP send failed'),
-    }).catch(() => {});
+
+  if (!result?.success) {
+    const errorDetail =
+      typeof result?.error === 'string'
+        ? result.error
+        : JSON.stringify(result?.error || 'SMTP send failed');
+
+    console.error('[otp] Email delivery failed for', identifier, '—', errorDetail);
+
+    sendOtpFailureAdminEmail({ email: identifier, error: errorDetail }).catch((err) => {
+      console.error('[otp] Could not notify admin of OTP failure:', err.message);
+    });
+
+    res.status(503);
+    throw new Error(`Could not send OTP email: ${errorDetail}`);
   }
 
   res.json({
     success: true,
-    message: emailSent
-      ? 'OTP sent to your email. Please check your inbox.'
-      : 'OTP generated. Email delivery failed — please try again.',
+    message: 'OTP sent to your email. Please check your inbox.',
     channel,
     identifier: identifier.replace(/(.{2}).+(@.+)/, '$1***$2'),
     expiresIn: 600,
-    emailSent,
+    emailSent: true,
   });
 });
 
