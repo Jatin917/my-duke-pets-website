@@ -22,6 +22,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 
+// Hostinger (and most hosts) sit behind a reverse proxy and send X-Forwarded-For.
+// Required so express-rate-limit can identify clients correctly.
+app.set('trust proxy', Number(process.env.TRUST_PROXY_HOPS) || 1);
+
 /** Strip path/trailing slash so https://site.com/ and https://site.com match. */
 const toOrigin = (value) => {
   if (!value) return null;
