@@ -23,7 +23,7 @@ export const formatEmailError = (err) => {
 const getSmtpTransport = () => {
   if (!smtpConfigured()) return null;
   if (!smtpTransport) {
-    const port = Number(process.env.SMTP_PORT || 465);
+    const port = Number(465);
     smtpTransport = nodemailer.createTransport({
       host: process.env.SMTP_HOST || 'smtp.hostinger.com',
       port,
