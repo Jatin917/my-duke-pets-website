@@ -5,8 +5,16 @@ const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
 
 let smtpTransport = null;
 
+/** Strip surrounding quotes/spaces from .env values. */
+const cleanEnv = (value) => {
+  if (value == null) return '';
+  return String(value)
+    .trim()
+    .replace(/^['"]|['"]$/g, '');
+};
+
 const smtpConfigured = () =>
-  Boolean(process.env.SMTP_USER && process.env.SMTP_PASSWORD);
+  Boolean(cleanEnv(process.env.SMTP_USER) && cleanEnv(process.env.SMTP_PASSWORD));
 
 /** Human-readable SMTP / nodemailer error for logs and API responses. */
 export const formatEmailError = (err) => {
@@ -23,55 +31,101 @@ export const formatEmailError = (err) => {
   return parts.join(' — ') || 'Email send failed';
 };
 
+/**
+ * Build SMTP options. Port decides encryption:
+ * - 465 → implicit TLS (secure: true)
+ * - 587 / other → STARTTLS (secure: false)
+ * This avoids "wrong version number" when SMTP_SECURE conflicts with the port.
+ */
+const buildSmtpOptions = () => {
+  const host = cleanEnv(process.env.SMTP_HOST) || 'smtp.hostinger.com';
+  const port = Number(cleanEnv(process.env.SMTP_PORT) || 465);
+  const user = cleanEnv(process.env.SMTP_USER);
+  const pass = cleanEnv(process.env.SMTP_PASSWORD);
+  const secure = port === 465;
+
+  return {
+    host,
+    port,
+    secure,
+    requireTLS: !secure,
+    auth: { user, pass },
+  };
+};
+
 const getSmtpTransport = () => {
   if (!smtpConfigured()) return null;
   if (!smtpTransport) {
-    const port = Number(process.env.SMTP_PORT || 465);
-    smtpTransport = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || 'smtp.hostinger.com',
-      port,
-      secure: process.env.SMTP_SECURE
-        ? process.env.SMTP_SECURE === 'true'
-        : port === 465,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-      },
-    });
+    smtpTransport = nodemailer.createTransport(buildSmtpOptions());
   }
   return smtpTransport;
 };
 
 const fromAddress = () =>
-  process.env.SMTP_FROM || `${SITE_NAME} <${process.env.SMTP_USER}>`;
+  cleanEnv(process.env.SMTP_FROM) ||
+  `${SITE_NAME} <${cleanEnv(process.env.SMTP_USER)}>`;
 
 const adminNotifyEmail = () =>
   process.env.ADMIN_NOTIFY_EMAIL || process.env.ADMIN_EMAIL || '';
 
 /** Verify SMTP credentials on server boot — logs a clear error if misconfigured. */
 export const verifySmtpOnStartup = async () => {
+  const rawHost = process.env.SMTP_HOST;
+  const rawPort = process.env.SMTP_PORT;
+  const rawSecure = process.env.SMTP_SECURE;
+  const rawUser = process.env.SMTP_USER;
+  const rawPass = process.env.SMTP_PASSWORD;
+  const rawFrom = process.env.SMTP_FROM;
+  const opts = smtpConfigured() ? buildSmtpOptions() : null;
+  const passClean = cleanEnv(rawPass);
+
+  console.log('[email] === SMTP .env check ===');
+  console.log('[email] SMTP_HOST     raw:', JSON.stringify(rawHost ?? '(missing)'), '→', opts?.host || '(n/a)');
+  console.log('[email] SMTP_PORT     raw:', JSON.stringify(rawPort ?? '(missing)'), '→', opts?.port ?? '(n/a)');
+  console.log('[email] SMTP_SECURE   raw:', JSON.stringify(rawSecure ?? '(not set — ignored; port decides)'));
+  console.log('[email] SMTP_USER     raw:', JSON.stringify(rawUser ?? '(missing)'), '→', opts?.auth?.user || '(n/a)');
+  console.log(
+    '[email] SMTP_PASSWORD set:',
+    Boolean(passClean),
+    '| length:',
+    passClean.length,
+    '| quoted in .env:',
+    /^['"].*['"]$/.test(String(rawPass || '').trim()),
+    '| preview:',
+    passClean ? `${passClean.slice(0, 2)}***${passClean.slice(-2)}` : '(empty)'
+  );
+  console.log('[email] SMTP_FROM     raw:', JSON.stringify(rawFrom ?? '(missing)'), '→', fromAddress());
+  console.log(
+    '[email] Effective mode:',
+    opts ? `${opts.host}:${opts.port} ${opts.secure ? 'SSL/TLS' : 'STARTTLS'}` : 'NOT CONFIGURED'
+  );
+  console.log('[email] ========================');
+
   if (!smtpConfigured()) {
     console.warn('[email] SMTP not configured — set SMTP_USER and SMTP_PASSWORD');
     return false;
   }
   try {
     const transport = getSmtpTransport();
-    console.log('transport', process.env.SMTP_HOST, process.env.SMTP_PORT, process.env.SMTP_USER, process.env.SMTP_PASSWORD);
     if (!transport) {
       console.warn('[email] SMTP not configured — set SMTP_USER and SMTP_PASSWORD');
       return false;
     }
     console.log(
       '[email] SMTP connecting:',
-      process.env.SMTP_HOST || 'smtp.hostinger.com',
-      `port ${process.env.SMTP_PORT || 465}`,
-      process.env.SMTP_USER
+      opts.host,
+      `port ${opts.port}`,
+      opts.secure ? 'SSL/TLS' : 'STARTTLS',
+      opts.auth.user
     );
     await transport.verify();
-    console.log('[email] SMTP verified:', process.env.SMTP_HOST || 'smtp.hostinger.com');
+    console.log('[email] SMTP verified:', opts.host);
     return true;
   } catch (err) {
     console.error('[email] SMTP verify failed:', formatEmailError(err));
+    console.error(
+      '[email] Tip: port 465 needs SSL/TLS; port 587 needs STARTTLS. Mode is auto-picked from SMTP_PORT.'
+    );
     return false;
   }
 };
