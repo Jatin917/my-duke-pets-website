@@ -99,51 +99,22 @@ const nearestFraction = (table, total, x, y) => {
 const AUTO_DURATION_MS = 22000; // full lap time
 const CHECKPOINT_WINDOW = 0.05;
 
-/** Side-view pup mascot — flips with facing via scaleX. */
+/** Path mascot — same 🐶 emoji as before; flips with facing via scaleX. */
 const PathDog = ({ facing }) => (
-  <svg
-    viewBox="0 0 96 72"
-    className="h-12 w-auto drop-shadow-lg sm:h-14 lg:h-16"
-    style={{
-      display: 'block',
-      transform: facing === 'left' ? 'scaleX(-1)' : 'none',
-    }}
-    aria-hidden="true"
-  >
-    {/* Tail */}
-    <path
-      d="M12 38c-6-2-9-8-8-14 4 2 8 6 10 12z"
-      fill="#8B5A2B"
-    />
-    {/* Hind leg */}
-    <ellipse cx="28" cy="58" rx="7" ry="9" fill="#6F4420" />
-    {/* Body */}
-    <ellipse cx="42" cy="40" rx="26" ry="16" fill="#A0522D" />
-    <ellipse cx="40" cy="38" rx="18" ry="10" fill="#C68642" opacity="0.55" />
-    {/* Front leg */}
-    <ellipse cx="58" cy="58" rx="6.5" ry="9" fill="#6F4420" />
-    {/* Neck + head */}
-    <ellipse cx="68" cy="28" rx="16" ry="14" fill="#A0522D" />
-    {/* Ear */}
-    <path d="M58 18c-2-10 4-16 10-14 1 6-2 12-8 16z" fill="#6F4420" />
-    <path d="M60 18c-1-6 3-10 7-9 0 4-1 8-5 11z" fill="#D4A574" />
-    {/* Snout */}
-    <ellipse cx="80" cy="30" rx="9" ry="7" fill="#E8C49A" />
-    {/* Nose */}
-    <ellipse cx="88" cy="28" rx="3.2" ry="2.4" fill="#2A1A12" />
-    {/* Eye */}
-    <circle cx="72" cy="24" r="2.4" fill="#1A120C" />
-    <circle cx="72.7" cy="23.3" r="0.7" fill="#fff" />
-    {/* Collar */}
-    <path
-      d="M56 36c6 4 14 4 20 0"
-      fill="none"
-      stroke="#EA580C"
-      strokeWidth="3"
-      strokeLinecap="round"
-    />
-    <circle cx="76" cy="36" r="2.5" fill="#FBBF24" />
-  </svg>
+  <div className="relative flex flex-col items-center">
+    <span
+      className="text-5xl drop-shadow-md sm:text-6xl lg:text-7xl"
+      style={{
+        display: 'inline-block',
+        lineHeight: 1,
+        transform: facing === 'left' ? 'scaleX(-1)' : 'none',
+      }}
+      aria-hidden="true"
+    >
+      🐶
+    </span>
+    <span className="mt-0.5 h-2 w-8 rounded-full bg-black/20 blur-[1.5px]" />
+  </div>
 );
 
 // Boustrophedon (snake) grid placement so row transitions drop straight down.

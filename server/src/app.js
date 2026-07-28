@@ -16,6 +16,8 @@ import customerAuthRoutes from './routes/customerAuthRoutes.js';
 import donateRoutes from './routes/donateRoutes.js';
 import sellRoutes from './routes/sellRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
+import breedRoutes from './routes/breedRoutes.js';
+import enquiryPromptRoutes from './routes/enquiryPromptRoutes.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -139,7 +141,8 @@ const authLimiter = rateLimit({
 app.use('/api/auth/login', authLimiter);
 app.use('/api/customer/auth/send-otp', authLimiter);
 app.use('/api/customer/auth/verify-otp', authLimiter);
-app.use('/api/customer/auth/complete-signup', authLimiter);
+app.use('/api/customer/auth/login', authLimiter);
+app.use('/api/customer/auth/register', authLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
@@ -150,8 +153,10 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/customer/auth', customerAuthRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/breeds', breedRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/enquiry', enquiryRoutes);
+app.use('/api/enquiry-prompt', enquiryPromptRoutes);
 app.use('/api/donate', donateRoutes);
 app.use('/api/sell', sellRoutes);
 app.use('/api/contact', contactRoutes);

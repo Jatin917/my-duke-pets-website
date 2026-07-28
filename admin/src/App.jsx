@@ -6,8 +6,10 @@ import Dashboard from './pages/Dashboard';
 import Pets from './pages/Pets';
 import PetForm from './pages/PetForm';
 import Categories from './pages/Categories';
+import Breeds from './pages/Breeds';
 import Enquiries from './pages/Enquiries';
 import DonateSettings from './pages/DonateSettings';
+import EnquiryPromptSettings from './pages/EnquiryPromptSettings';
 import SellRequests from './pages/SellRequests';
 import NotFound from './pages/NotFound';
 
@@ -23,7 +25,9 @@ function App() {
           <Route path="/pets/new" element={<PetForm />} />
           <Route path="/pets/:id/edit" element={<PetForm />} />
           <Route path="/categories" element={<Categories />} />
+          <Route path="/breeds" element={<Breeds />} />
           <Route path="/enquiries" element={<Enquiries />} />
+          <Route path="/enquiry-prompt" element={<EnquiryPromptSettings />} />
           <Route path="/sell" element={<SellRequests />} />
           <Route path="/donate" element={<DonateSettings />} />
         </Route>

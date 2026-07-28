@@ -8,6 +8,7 @@ import Breadcrumb from '../components/common/Breadcrumb';
 import Loader from '../components/common/Loader';
 import { fetchPets } from '../services/petService';
 import { fetchCategories } from '../services/categoryService';
+import { fetchBreeds } from '../services/breedService';
 import { submitSellRequest } from '../services/sellService';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { SITE_NAME, GENDER_OPTIONS } from '../utils/constants';
@@ -22,6 +23,7 @@ const Sell = () => {
   const [step, setStep] = useState('form'); // form | done
   const [pets, setPets] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [apiBreeds, setApiBreeds] = useState([]);
   const [loadingMeta, setLoadingMeta] = useState(true);
   const [photos, setPhotos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
@@ -64,20 +66,38 @@ const Sell = () => {
     if (customer.phone) setValue('sellerPhone', customer.phone);
   }, [isAuthenticated, customer, setValue]);
 
-  // Breeds from listed pets in the selected category
+  useEffect(() => {
+    setSelectedCategory(categoryWatch || '');
+    setValue('breed', '');
+    if (!categoryWatch || categoryWatch === OTHER) {
+      setApiBreeds([]);
+      return undefined;
+    }
+    let cancelled = false;
+    fetchBreeds({ category: categoryWatch })
+      .then((res) => {
+        if (!cancelled) setApiBreeds(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setApiBreeds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryWatch, setValue]);
+
+  // Prefer admin breeds; fall back to unique breeds from listed pets
   const breedOptions = useMemo(() => {
     if (!selectedCategory || selectedCategory === OTHER) return [];
+    if (apiBreeds.length) {
+      return apiBreeds.map((b) => b.name).filter(Boolean);
+    }
     const breeds = pets
       .filter((p) => String(p.category?._id || p.category) === String(selectedCategory))
       .map((p) => p.breed)
       .filter(Boolean);
     return [...new Set(breeds)].sort((a, b) => a.localeCompare(b));
-  }, [pets, selectedCategory]);
-
-  useEffect(() => {
-    setSelectedCategory(categoryWatch || '');
-    setValue('breed', '');
-  }, [categoryWatch, setValue]);
+  }, [pets, selectedCategory, apiBreeds]);
 
   const onAddPhotos = (e) => {
     const files = Array.from(e.target.files || []);

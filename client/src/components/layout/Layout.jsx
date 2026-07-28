@@ -10,6 +10,7 @@ import MobileQuickFooter from './MobileQuickFooter';
 import CompareBar from '../pets/CompareBar';
 import ClickEffects from '../effects/ClickEffects';
 import DonatePrompt from '../donate/DonatePrompt';
+import EnquiryPrompt from '../enquiry/EnquiryPrompt';
 
 const Layout = () => {
   const [topBarVisible, setTopBarVisible] = useState(true);
@@ -36,6 +37,7 @@ const Layout = () => {
       <BackToTop />
       <MobileQuickFooter />
       <CompareBar />
+      <EnquiryPrompt />
       <DonatePrompt />
     </div>
   );

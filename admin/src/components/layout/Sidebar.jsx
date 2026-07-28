@@ -7,13 +7,17 @@ import {
   FiX,
   FiHeart,
   FiShoppingBag,
+  FiList,
+  FiMessageSquare,
 } from 'react-icons/fi';
 
 const links = [
   { to: '/', label: 'Dashboard', icon: FiGrid },
   { to: '/pets', label: 'Manage Pets', icon: FiPackage },
   { to: '/categories', label: 'Categories', icon: FiTag },
+  { to: '/breeds', label: 'Breeds', icon: FiList },
   { to: '/enquiries', label: 'Enquiries', icon: FiMail },
+  { to: '/enquiry-prompt', label: 'Enquiry Prompt', icon: FiMessageSquare },
   { to: '/sell', label: 'Sell Requests', icon: FiShoppingBag },
   { to: '/donate', label: 'Donate', icon: FiHeart },
 ];

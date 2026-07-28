@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiEye, FiBarChart2 } from 'react-icons/fi';
+import { FaWhatsapp, FaPhoneAlt } from 'react-icons/fa';
 import { MdVerified } from 'react-icons/md';
 import { resolveImageUrl } from '../../services/api';
 import { truncate } from '../../utils/formatters';
 import { useCompare } from '../../context/CompareContext';
+import { PHONE_LINK, WHATSAPP_LINK } from '../../utils/constants';
 import PetPrice from './PetPrice';
 
 const PetCard = ({ pet, onEnquire }) => {
@@ -12,6 +14,9 @@ const PetCard = ({ pet, onEnquire }) => {
   const { isComparing, toggleCompare } = useCompare();
   const images = pet.images?.length ? pet.images : [];
   const comparing = isComparing(pet._id);
+  const whatsappHref = WHATSAPP_LINK(
+    `Hello My Duke, I am interested in ${pet.name}${pet.breed ? ` (${pet.breed})` : ''}.`
+  );
 
   return (
     <div className="group bg-white rounded-2xl overflow-hidden shadow-soft hover:shadow-glow hover:-translate-y-1 transition-[transform,box-shadow] duration-200 flex flex-col">
@@ -85,8 +90,28 @@ const PetCard = ({ pet, onEnquire }) => {
           <p className="text-xs text-gray-400 line-clamp-2 mb-3">{truncate(pet.description, 80)}</p>
         )}
 
-        <div className="mt-auto flex items-center justify-between pt-3 border-t border-gray-100">
+        <div className="mt-auto flex items-end justify-between gap-3 pt-3 border-t border-gray-100">
           <PetPrice pet={pet} size="md" returnPath={`/pets/${pet.slug}`} />
+          <div className="flex items-center gap-2 shrink-0 pb-0.5">
+            <a
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`WhatsApp about ${pet.name}`}
+              title="WhatsApp"
+              className="w-9 h-9 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-sm hover:brightness-105 transition"
+            >
+              <FaWhatsapp size={16} />
+            </a>
+            <a
+              href={PHONE_LINK}
+              aria-label="Call us"
+              title="Call"
+              className="w-9 h-9 rounded-full btn-gradient text-white flex items-center justify-center shadow-sm hover:brightness-105 transition"
+            >
+              <FaPhoneAlt size={13} />
+            </a>
+          </div>
         </div>
 
         <div className="flex gap-2 mt-4">

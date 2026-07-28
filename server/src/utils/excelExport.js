@@ -9,6 +9,7 @@ const filePath = path.join(exportsDir, 'enquiries.xlsx');
 
 const COLUMNS = [
   { header: 'Date', key: 'date', width: 20 },
+  { header: 'Source', key: 'source', width: 12 },
   { header: 'Name', key: 'name', width: 20 },
   { header: 'Phone', key: 'phone', width: 16 },
   { header: 'Email', key: 'email', width: 25 },
@@ -16,6 +17,7 @@ const COLUMNS = [
   { header: 'State', key: 'state', width: 15 },
   { header: 'Pet Name', key: 'petName', width: 18 },
   { header: 'Category', key: 'category', width: 15 },
+  { header: 'Breed', key: 'breed', width: 18 },
   { header: 'Message', key: 'message', width: 30 },
   { header: 'Status', key: 'status', width: 14 },
 ];
@@ -55,6 +57,7 @@ export const appendEnquiryToExcel = async (enquiry) => {
 
     worksheet.addRow({
       date: new Date(enquiry.createdAt || Date.now()).toLocaleString(),
+      source: enquiry.source || 'pet',
       name: enquiry.name,
       phone: enquiry.phone,
       email: enquiry.email,
@@ -62,6 +65,7 @@ export const appendEnquiryToExcel = async (enquiry) => {
       state: enquiry.state,
       petName: enquiry.petName,
       category: enquiry.category,
+      breed: enquiry.breed || '',
       message: enquiry.message,
       status: enquiry.status,
     });
@@ -89,6 +93,7 @@ export const generateEnquiriesExcelBuffer = async (enquiries) => {
   enquiries.forEach((enquiry) => {
     worksheet.addRow({
       date: new Date(enquiry.createdAt).toLocaleString(),
+      source: enquiry.source || 'pet',
       name: enquiry.name,
       phone: enquiry.phone,
       email: enquiry.email,
@@ -96,6 +101,7 @@ export const generateEnquiriesExcelBuffer = async (enquiries) => {
       state: enquiry.state,
       petName: enquiry.petName,
       category: enquiry.category,
+      breed: enquiry.breed || '',
       message: enquiry.message,
       status: enquiry.status,
     });

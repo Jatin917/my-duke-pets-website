@@ -73,7 +73,7 @@ const DonateSettings = () => {
       const fd = new FormData();
       fd.append('pageEnabled', String(!!form.pageEnabled));
       fd.append('promptEnabled', String(!!form.promptEnabled));
-      fd.append('promptDelaySeconds', String(form.promptDelaySeconds || 30));
+      fd.append('promptDelaySeconds', String(form.promptDelaySeconds || 45));
       fd.append('promptTitle', form.promptTitle || '');
       fd.append('promptMessage', form.promptMessage || '');
       fd.append('promptCtaText', form.promptCtaText || '');
@@ -117,7 +117,7 @@ const DonateSettings = () => {
         <div>
           <h1 className="text-2xl font-bold text-gray-800">Donate Page</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Manage My Duke donate content, QR code, and the 30s prompt
+            Manage My Duke donate content, QR code, and the prompt (recommended delay: 45s)
           </p>
         </div>
         <button
@@ -158,7 +158,7 @@ const DonateSettings = () => {
               type="number"
               min={5}
               max={600}
-              value={form.promptDelaySeconds ?? 30}
+              value={form.promptDelaySeconds ?? 45}
               onChange={(e) => setField('promptDelaySeconds', Number(e.target.value))}
               className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm"
             />

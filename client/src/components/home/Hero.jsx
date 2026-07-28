@@ -121,7 +121,7 @@ const Hero = () => {
             >
               <button
                 type="button"
-                onClick={() => scrollToId('buy-sell')}
+                onClick={() => scrollToId('categories')}
                 className="btn-gradient text-white font-semibold px-7 py-3.5 rounded-xl shadow-glow text-sm sm:text-base"
               >
                 Find a Pet

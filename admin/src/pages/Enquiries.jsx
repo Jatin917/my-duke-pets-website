@@ -38,8 +38,10 @@ const DetailModal = ({ enquiry, onClose }) => (
           ['City', enquiry.city],
           ['State', enquiry.state],
           ['Address', enquiry.address || '-'],
-          ['Pet', enquiry.petName],
+          ['Pet', enquiry.petName || (enquiry.source === 'prompt' ? '— (prompt)' : '-')],
           ['Category', enquiry.category],
+          ['Breed', enquiry.breed || '-'],
+          ['Source', enquiry.source === 'prompt' ? 'Timed prompt' : 'Pet listing'],
           ['Message', enquiry.message || '-'],
           ['Date', formatDate(enquiry.createdAt)],
         ].map(([label, value]) => (
@@ -214,7 +216,8 @@ const Enquiries = () => {
               <thead>
                 <tr className="text-left text-gray-400 border-b border-gray-100 bg-gray-50">
                   <th className="py-3 px-5 font-medium">Date</th>
-                  <th className="py-3 px-5 font-medium">Pet</th>
+                  <th className="py-3 px-5 font-medium">Source</th>
+                  <th className="py-3 px-5 font-medium">Pet / Breed</th>
                   <th className="py-3 px-5 font-medium">Name</th>
                   <th className="py-3 px-5 font-medium">Phone</th>
                   <th className="py-3 px-5 font-medium">Email</th>
@@ -227,7 +230,23 @@ const Enquiries = () => {
                 {enquiries.map((e) => (
                   <tr key={e._id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                     <td className="py-3 px-5 text-gray-500 whitespace-nowrap">{formatDate(e.createdAt)}</td>
-                    <td className="py-3 px-5 font-medium text-gray-700">{e.petName}</td>
+                    <td className="py-3 px-5">
+                      <span
+                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                          e.source === 'prompt'
+                            ? 'bg-primary-50 text-primary-700'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}
+                      >
+                        {e.source === 'prompt' ? 'Prompt' : 'Pet'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-5 font-medium text-gray-700">
+                      {e.petName || e.breed || '—'}
+                      {e.category ? (
+                        <span className="block text-xs font-normal text-gray-400">{e.category}</span>
+                      ) : null}
+                    </td>
                     <td className="py-3 px-5 text-gray-700">{e.name}</td>
                     <td className="py-3 px-5 text-gray-500">{e.phone}</td>
                     <td className="py-3 px-5 text-gray-500">{e.email}</td>
@@ -265,7 +284,7 @@ const Enquiries = () => {
                 ))}
                 {enquiries.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-10 text-center text-gray-400">
+                    <td colSpan={9} className="py-10 text-center text-gray-400">
                       No enquiries found
                     </td>
                   </tr>

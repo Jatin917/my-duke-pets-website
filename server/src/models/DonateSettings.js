@@ -37,7 +37,7 @@ const donateSettingsSchema = new mongoose.Schema(
     key: { type: String, default: 'default', unique: true },
     pageEnabled: { type: Boolean, default: true },
     promptEnabled: { type: Boolean, default: true },
-    promptDelaySeconds: { type: Number, default: 30, min: 5, max: 600 },
+    promptDelaySeconds: { type: Number, default: 45, min: 5, max: 600 },
     promptTitle: { type: String, default: 'Support a pet today?' },
     promptMessage: {
       type: String,

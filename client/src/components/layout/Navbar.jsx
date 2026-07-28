@@ -119,7 +119,7 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to={isAuthenticated ? '/account' : '/login?return_url=/account'}
+            to={isAuthenticated ? '/account' : '/login'}
             className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gray-100 text-gray-600 hover:bg-primary-50 hover:text-primary-600 transition"
             title={isAuthenticated ? customer?.name || 'Account' : 'Login'}
             aria-label={isAuthenticated ? 'Account' : 'Login'}
@@ -183,7 +183,7 @@ const Navbar = () => {
                 Help &amp; Support
               </Link>
               <Link
-                to={isAuthenticated ? '/account' : '/login?return_url=/account'}
+                to={isAuthenticated ? '/account' : '/login'}
                 onClick={() => setOpen(false)}
                 className="block text-center btn-gradient text-white font-semibold px-5 py-3 rounded-full"
               >

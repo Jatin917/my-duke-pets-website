@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa';
@@ -40,10 +40,23 @@ const socialLinks = [
 const Contact = () => {
   const { customer, isAuthenticated } = useCustomerAuth();
   const [form, setForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
     subject: '',
     message: '',
   });
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (!isAuthenticated || !customer) return;
+    setForm((prev) => ({
+      ...prev,
+      name: customer.name || prev.name,
+      email: customer.email || prev.email,
+      phone: customer.phone || prev.phone,
+    }));
+  }, [isAuthenticated, customer]);
 
   const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
@@ -51,19 +64,25 @@ const Contact = () => {
     event.preventDefault();
     setSending(true);
     try {
-      const data = await submitContactForm(form);
+      const data = await submitContactForm({
+        ...form,
+        phone: form.phone.replace(/\D/g, '').slice(-10),
+        email: form.email.trim().toLowerCase(),
+      });
       toast.success(data.message || 'Message sent! We will get back to you soon.');
-      setForm({ subject: '', message: '' });
+      setForm((prev) => ({
+        name: isAuthenticated ? prev.name : '',
+        email: isAuthenticated ? prev.email : '',
+        phone: isAuthenticated ? prev.phone : '',
+        subject: '',
+        message: '',
+      }));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not send message. Please try again.');
     } finally {
       setSending(false);
     }
   };
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login?return_url=/contact&reason=required" replace />;
-  }
 
   return (
     <>
@@ -173,17 +192,39 @@ const Contact = () => {
               className="rounded-3xl bg-white border border-gray-100 shadow-soft p-6 sm:p-8"
             >
               <h3 className="font-display text-xl font-bold text-gray-900 mb-6">Send a Message</h3>
-              <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-gray-600">
-                Sending as <strong className="text-gray-900">{customer?.name || 'Pet Parent'}</strong>
-                {customer?.email ? ` · ${customer.email}` : ''}
-                {customer?.phone ? ` · +91 ${customer.phone}` : ''}
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  required
+                  value={form.name}
+                  onChange={(event) => updateField('name', event.target.value)}
+                  placeholder="Your Name *"
+                  className={inputClass}
+                />
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="Email *"
+                  className={inputClass}
+                />
+                <input
+                  required
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={form.phone}
+                  onChange={(event) =>
+                    updateField('phone', event.target.value.replace(/\D/g, '').slice(0, 10))
+                  }
+                  placeholder="Mobile Number *"
+                  className={`${inputClass} sm:col-span-2`}
+                />
                 <input
                   required
                   value={form.subject}
                   onChange={(event) => updateField('subject', event.target.value)}
-                  placeholder="Subject"
+                  placeholder="Subject *"
                   className={`${inputClass} sm:col-span-2`}
                 />
                 <textarea
@@ -191,7 +232,7 @@ const Contact = () => {
                   rows={7}
                   value={form.message}
                   onChange={(event) => updateField('message', event.target.value)}
-                  placeholder="Message"
+                  placeholder="Message *"
                   className={`${inputClass} sm:col-span-2 resize-y`}
                 />
               </div>

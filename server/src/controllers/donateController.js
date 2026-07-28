@@ -61,7 +61,7 @@ export const updateDonateSettings = asyncHandler(async (req, res) => {
   });
 
   if (body.promptDelaySeconds !== undefined) {
-    settings.promptDelaySeconds = Math.min(600, Math.max(5, Number(body.promptDelaySeconds) || 30));
+    settings.promptDelaySeconds = Math.min(600, Math.max(5, Number(body.promptDelaySeconds) || 45));
   }
 
   const stringFields = [

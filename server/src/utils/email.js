@@ -253,47 +253,59 @@ export const sendLoginAlertEmail = async ({ email, name }) =>
     text: `Successful login to your ${SITE_NAME} account.`,
   });
 
-export const sendEnquiryConfirmationEmail = async ({ enquiry }) =>
-  sendEmail({
+export const sendEnquiryConfirmationEmail = async ({ enquiry }) => {
+  const subjectLabel =
+    enquiry.petName ||
+    [enquiry.breed, enquiry.category].filter(Boolean).join(' · ') ||
+    'your enquiry';
+  return sendEmail({
     to: enquiry.email,
-    subject: `We received your enquiry for ${enquiry.petName}`,
+    subject: `We received your enquiry — ${SITE_NAME}`,
     html: layout(
       'Enquiry received',
       `
-      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${enquiry.name}, thanks for your interest in <strong>${enquiry.petName}</strong>. Our team will contact you shortly.</p>
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">Hi ${enquiry.name}, thanks for reaching out about <strong>${subjectLabel}</strong>. Our team will contact you shortly.</p>
       <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
-        <tr><td style="padding:6px 0;color:#9ca3af;">Pet</td><td style="padding:6px 0;">${enquiry.petName}</td></tr>
+        ${enquiry.petName ? `<tr><td style="padding:6px 0;color:#9ca3af;">Pet</td><td style="padding:6px 0;">${enquiry.petName}</td></tr>` : ''}
         <tr><td style="padding:6px 0;color:#9ca3af;">Category</td><td style="padding:6px 0;">${enquiry.category || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Breed</td><td style="padding:6px 0;">${enquiry.breed || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${enquiry.phone}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">City</td><td style="padding:6px 0;">${enquiry.city}, ${enquiry.state}</td></tr>
       </table>
       `
     ),
-    text: `Hi ${enquiry.name}, we received your enquiry for ${enquiry.petName}. We'll contact you soon.`,
+    text: `Hi ${enquiry.name}, we received your enquiry for ${subjectLabel}. We'll contact you soon.`,
   });
+};
 
 export const sendEnquiryAdminEmail = async ({ enquiry }) => {
   const to = adminNotifyEmail();
   if (!to) return { skipped: true };
+  const subjectLabel =
+    enquiry.petName ||
+    [enquiry.breed, enquiry.category].filter(Boolean).join(' · ') ||
+    'Prompt enquiry';
   return sendEmail({
     to,
-    subject: `New enquiry: ${enquiry.petName} — ${enquiry.name}`,
+    subject: `New enquiry: ${subjectLabel} — ${enquiry.name}`,
     html: layout(
       'New pet enquiry',
       `
-      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">A new enquiry was submitted on ${SITE_NAME}.</p>
+      <p style="margin:0 0 12px;line-height:1.6;color:#4b5563;">A new enquiry was submitted on ${SITE_NAME}${enquiry.source === 'prompt' ? ' (timed prompt)' : ''}.</p>
       <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
         <tr><td style="padding:6px 0;color:#9ca3af;">Name</td><td style="padding:6px 0;">${enquiry.name}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${enquiry.phone}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${enquiry.email}</td></tr>
-        <tr><td style="padding:6px 0;color:#9ca3af;">Pet</td><td style="padding:6px 0;">${enquiry.petName} (${enquiry.category || '-'})</td></tr>
+        ${enquiry.petName ? `<tr><td style="padding:6px 0;color:#9ca3af;">Pet</td><td style="padding:6px 0;">${enquiry.petName}</td></tr>` : ''}
+        <tr><td style="padding:6px 0;color:#9ca3af;">Category</td><td style="padding:6px 0;">${enquiry.category || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Breed</td><td style="padding:6px 0;">${enquiry.breed || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Location</td><td style="padding:6px 0;">${enquiry.city}, ${enquiry.state}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Message</td><td style="padding:6px 0;">${enquiry.message || '-'}</td></tr>
       </table>
       <p style="margin:16px 0 0;"><a href="${process.env.ADMIN_URL || CLIENT_URL}" style="color:#ea580c;">Open admin</a></p>
       `
     ),
-    text: `New enquiry from ${enquiry.name} for ${enquiry.petName}. Phone: ${enquiry.phone}`,
+    text: `New enquiry from ${enquiry.name} for ${subjectLabel}. Phone: ${enquiry.phone}`,
   });
 };
 
@@ -473,6 +485,7 @@ export const sendHelpEnquiryConfirmationEmail = async ({ form }) =>
       <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
         <tr><td style="padding:6px 0;color:#9ca3af;">Intent</td><td style="padding:6px 0;">${form.intent || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Pet type</td><td style="padding:6px 0;">${form.petType || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Breed</td><td style="padding:6px 0;">${form.breed || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">City</td><td style="padding:6px 0;">${form.city || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
       </table>
@@ -497,6 +510,7 @@ export const sendHelpEnquiryAdminEmail = async ({ form }) => {
         <tr><td style="padding:6px 0;color:#9ca3af;">Phone</td><td style="padding:6px 0;">${form.phone || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Email</td><td style="padding:6px 0;">${form.email}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Pet type</td><td style="padding:6px 0;">${form.petType || '-'}</td></tr>
+        <tr><td style="padding:6px 0;color:#9ca3af;">Breed</td><td style="padding:6px 0;">${form.breed || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">City</td><td style="padding:6px 0;">${form.city || '-'}</td></tr>
         <tr><td style="padding:6px 0;color:#9ca3af;">Message</td><td style="padding:6px 0;">${form.message || '-'}</td></tr>
       </table>

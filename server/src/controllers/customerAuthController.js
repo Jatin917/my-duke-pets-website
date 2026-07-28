@@ -12,119 +12,66 @@ import {
 } from '../utils/email.js';
 import { normalizeIndianMobile, verifyMsg91AccessToken } from '../utils/msg91.js';
 
-const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_EXPIRY_MS = 10 * 60 * 1000;
 const MAX_ATTEMPTS = 5;
-const SIGNUP_TOKEN_EXPIRES = '15m';
+const VERIFY_TOKEN_EXPIRES = '30m';
 
 const generateOtpCode = () => String(Math.floor(100000 + Math.random() * 900000));
-
-const normalizeIdentifier = (channel, email, phone) => {
-  if (channel === 'email') return (email || '').trim().toLowerCase();
-  return normalizeIndianMobile(phone);
-};
 
 const formatCustomer = (customer) => ({
   id: customer._id,
   name: customer.name || '',
   email: customer.email || '',
   phone: customer.phone || '',
+  state: customer.state || '',
+  city: customer.city || '',
+  emailVerified: Boolean(customer.emailVerified),
+  phoneVerified: Boolean(customer.phoneVerified),
 });
 
-const createSignupToken = (channel, identifier) =>
-  jwt.sign({ type: 'signup', channel, identifier }, process.env.JWT_SECRET, {
-    expiresIn: SIGNUP_TOKEN_EXPIRES,
+const createEmailVerifyToken = (email) =>
+  jwt.sign({ type: 'email-verify', email }, process.env.JWT_SECRET, {
+    expiresIn: VERIFY_TOKEN_EXPIRES,
   });
 
-const verifySignupToken = (token) => {
-  const decoded = jwt.verify(token, process.env.JWT_SECRET);
-  if (decoded.type !== 'signup' || !decoded.channel || !decoded.identifier) {
-    throw new Error('Invalid signup token');
+const readEmailVerifyToken = (token) => {
+  if (!token) return null;
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.type !== 'email-verify' || !decoded.email) return null;
+    return String(decoded.email).toLowerCase();
+  } catch {
+    return null;
   }
-  return decoded;
 };
 
-const finishVerifiedLogin = async (res, channel, identifier) => {
-  const query = channel === 'email' ? { email: identifier } : { phone: identifier };
-  const customer = await Customer.findOne(query);
-
-  if (customer) {
-    customer.isVerified = true;
-    customer.lastLogin = new Date();
-    await customer.save();
-
-    if (customer.email) {
-      sendLoginAlertEmail({ email: customer.email, name: customer.name }).catch(() => {});
-    }
-
-    return res.json({
-      success: true,
-      isNewUser: false,
-      message: 'Login successful',
-      token: generateToken(customer._id, 'customer'),
-      customer: formatCustomer(customer),
-    });
-  }
-
-  return res.json({
-    success: true,
-    isNewUser: true,
-    message: 'OTP verified. Please complete your profile.',
-    signupToken: createSignupToken(channel, identifier),
-    channel,
-    identifier:
-      channel === 'email'
-        ? identifier.replace(/(.{2}).+(@.+)/, '$1***$2')
-        : `******${identifier.slice(-4)}`,
-  });
-};
-
-// @desc    Send OTP via email (phone OTP is handled by MSG91 widget on the client)
+// @desc    Send email OTP (optional verification during register)
 // @route   POST /api/customer/auth/send-otp
-// @access  Public
 export const sendOtp = asyncHandler(async (req, res) => {
-  const { channel, email, phone } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
 
-  if (!['email', 'phone'].includes(channel)) {
-    res.status(400);
-    throw new Error('Channel must be email or phone');
-  }
-
-  if (channel === 'phone') {
-    res.status(400);
-    throw new Error('Phone OTP is sent via MSG91 on the login page. Use email OTP here, or verify with MSG91.');
-  }
-
-  const identifier = normalizeIdentifier(channel, email, phone);
-
-  if (!/^\S+@\S+\.\S+$/.test(identifier)) {
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
     res.status(400);
     throw new Error('Please provide a valid email');
   }
 
   await Otp.updateMany(
-    { identifier, channel, verified: false },
+    { identifier: email, channel: 'email', verified: false },
     { $set: { verified: true } }
   );
 
   const code = generateOtpCode();
   const expiresAt = new Date(Date.now() + OTP_EXPIRY_MS);
+  await Otp.create({ channel: 'email', identifier: email, code, expiresAt });
 
-  await Otp.create({ channel, identifier, code, expiresAt });
-
-  const result = await sendOtpEmail({ email: identifier, code });
-
+  const result = await sendOtpEmail({ email, code });
   if (!result?.success) {
     const errorDetail =
       typeof result?.error === 'string'
         ? result.error
         : JSON.stringify(result?.error || 'SMTP send failed');
-
-    console.error('[otp] Email delivery failed for', identifier, '—', errorDetail);
-
-    sendOtpFailureAdminEmail({ email: identifier, error: errorDetail }).catch((err) => {
-      console.error('[otp] Could not notify admin of OTP failure:', err.message);
-    });
-
+    console.error('[otp] Email delivery failed for', email, '—', errorDetail);
+    sendOtpFailureAdminEmail({ email, error: errorDetail }).catch(() => {});
     res.status(503);
     throw new Error(`Could not send OTP email: ${errorDetail}`);
   }
@@ -132,39 +79,30 @@ export const sendOtp = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: 'OTP sent to your email. Please check your inbox.',
-    channel,
-    identifier: identifier.replace(/(.{2}).+(@.+)/, '$1***$2'),
+    channel: 'email',
+    identifier: email.replace(/(.{2}).+(@.+)/, '$1***$2'),
     expiresIn: 600,
-    emailSent: true,
   });
 });
 
-// @desc    Verify email OTP — existing users log in; new users get a signup token
+// @desc    Verify email OTP → returns short-lived proof token (does not log in)
 // @route   POST /api/customer/auth/verify-otp
-// @access  Public
 export const verifyOtp = asyncHandler(async (req, res) => {
-  const { channel, email, phone, otp } = req.body;
+  const email = (req.body.email || '').trim().toLowerCase();
+  const otp = String(req.body.otp || '').trim();
 
-  if (channel === 'phone') {
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
     res.status(400);
-    throw new Error('Phone OTP must be verified via MSG91. Submit the MSG91 access token instead.');
+    throw new Error('Please provide a valid email');
   }
-
-  if (channel !== 'email') {
-    res.status(400);
-    throw new Error('Channel must be email or phone');
-  }
-
-  if (!otp || String(otp).length !== 6) {
+  if (!/^[0-9]{6}$/.test(otp)) {
     res.status(400);
     throw new Error('Please enter a valid 6-digit OTP');
   }
 
-  const identifier = normalizeIdentifier(channel, email, phone);
-
   const otpDoc = await Otp.findOne({
-    identifier,
-    channel,
+    identifier: email,
+    channel: 'email',
     verified: false,
   }).sort({ createdAt: -1 });
 
@@ -172,18 +110,15 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('OTP not found or already used. Please request a new one.');
   }
-
   if (otpDoc.expiresAt < new Date()) {
     res.status(400);
     throw new Error('OTP has expired. Please request a new one.');
   }
-
   if (otpDoc.attempts >= MAX_ATTEMPTS) {
     res.status(400);
     throw new Error('Too many incorrect attempts. Please request a new OTP.');
   }
-
-  if (otpDoc.code !== String(otp).trim()) {
+  if (otpDoc.code !== otp) {
     otpDoc.attempts += 1;
     await otpDoc.save();
     res.status(400);
@@ -193,12 +128,16 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   otpDoc.verified = true;
   await otpDoc.save();
 
-  return finishVerifiedLogin(res, 'email', identifier);
+  res.json({
+    success: true,
+    message: 'Email verified successfully',
+    emailVerifyToken: createEmailVerifyToken(email),
+    email,
+  });
 });
 
-// @desc    Verify MSG91 widget access token (phone OTP)
+// @desc    Verify MSG91 phone access token (optional proof during register)
 // @route   POST /api/customer/auth/verify-msg91
-// @access  Public
 export const verifyMsg91 = asyncHandler(async (req, res) => {
   const accessToken = (req.body.accessToken || req.body['access-token'] || '').trim();
   const claimedPhone = normalizeIndianMobile(req.body.phone);
@@ -210,7 +149,7 @@ export const verifyMsg91 = asyncHandler(async (req, res) => {
 
   let verified;
   try {
-    verified = await verifyMsg91AccessToken(accessToken);
+    verified = await verifyMsg91AccessToken(accessToken, { fallbackPhone: claimedPhone });
   } catch (err) {
     res.status(401);
     throw new Error(err.message || 'MSG91 verification failed');
@@ -221,112 +160,164 @@ export const verifyMsg91 = asyncHandler(async (req, res) => {
     throw new Error('Verified mobile does not match the number you entered');
   }
 
-  return finishVerifiedLogin(res, 'phone', verified.phone);
+  res.json({
+    success: true,
+    message: 'Mobile verified successfully',
+    phone: verified.phone,
+    phoneAccessToken: accessToken,
+  });
 });
 
-// @desc    Complete signup for new customers after OTP verification
-// @route   POST /api/customer/auth/complete-signup
-// @access  Public (signup token)
-export const completeSignup = asyncHandler(async (req, res) => {
-  const { signupToken, name, email, phone } = req.body;
+// @desc    Register with password (email/phone verification optional)
+// @route   POST /api/customer/auth/register
+export const register = asyncHandler(async (req, res) => {
+  const name = (req.body.name || '').trim();
+  const email = (req.body.email || '').trim().toLowerCase();
+  const phone = normalizeIndianMobile(req.body.phone);
+  const state = (req.body.state || '').trim();
+  const city = (req.body.city || '').trim();
+  const password = String(req.body.password || '');
+  const confirmPassword = String(req.body.confirmPassword || '');
+  const emailVerifyToken = (req.body.emailVerifyToken || '').trim();
+  const phoneAccessToken = (req.body.phoneAccessToken || req.body.accessToken || '').trim();
 
-  if (!signupToken) {
-    res.status(400);
-    throw new Error('Signup session expired. Please verify OTP again.');
-  }
-
-  let decoded;
-  try {
-    decoded = verifySignupToken(signupToken);
-  } catch {
-    res.status(401);
-    throw new Error('Signup session expired. Please verify OTP again.');
-  }
-
-  const { channel, identifier } = decoded;
-  const trimmedName = (name || '').trim();
-
-  if (!trimmedName || trimmedName.length < 2) {
+  if (!name || name.length < 2) {
     res.status(400);
     throw new Error('Please enter your full name');
   }
-
-  const existing =
-    channel === 'email'
-      ? await Customer.findOne({ email: identifier })
-      : await Customer.findOne({ phone: identifier });
-
-  if (existing) {
+  if (!/^\S+@\S+\.\S+$/.test(email)) {
     res.status(400);
-    throw new Error('Account already exists. Please login again.');
+    throw new Error('Please provide a valid email');
+  }
+  if (!/^[0-9]{10}$/.test(phone)) {
+    res.status(400);
+    throw new Error('Please provide a valid 10-digit phone number');
+  }
+  if (!state) {
+    res.status(400);
+    throw new Error('Please select your state');
+  }
+  if (!city) {
+    res.status(400);
+    throw new Error('Please select your city');
+  }
+  if (password.length < 6) {
+    res.status(400);
+    throw new Error('Password must be at least 6 characters');
+  }
+  if (password !== confirmPassword) {
+    res.status(400);
+    throw new Error('Passwords do not match');
   }
 
-  const payload = {
-    name: trimmedName,
-    isVerified: true,
+  const emailTaken = await Customer.findOne({ email });
+  if (emailTaken) {
+    res.status(400);
+    throw new Error('An account with this email already exists. Please login.');
+  }
+  const phoneTaken = await Customer.findOne({ phone });
+  if (phoneTaken) {
+    res.status(400);
+    throw new Error('An account with this phone number already exists. Please login.');
+  }
+
+  let emailVerified = false;
+  const verifiedEmail = readEmailVerifyToken(emailVerifyToken);
+  if (verifiedEmail) {
+    if (verifiedEmail !== email) {
+      res.status(400);
+      throw new Error('Verified email does not match the email you entered');
+    }
+    emailVerified = true;
+  }
+
+  let phoneVerified = false;
+  if (phoneAccessToken) {
+    try {
+      const verified = await verifyMsg91AccessToken(phoneAccessToken, { fallbackPhone: phone });
+      if (verified.phone !== phone) {
+        res.status(400);
+        throw new Error('Verified mobile does not match the number you entered');
+      }
+      phoneVerified = true;
+    } catch (err) {
+      res.status(401);
+      throw new Error(err.message || 'Mobile verification failed');
+    }
+  }
+
+  const customer = await Customer.create({
+    name,
+    email,
+    phone,
+    password,
+    state,
+    city,
+    emailVerified,
+    phoneVerified,
+    isVerified: emailVerified || phoneVerified,
     lastLogin: new Date(),
-    ...(channel === 'email' ? { email: identifier } : { phone: identifier }),
-  };
+  });
 
-  // Collect the other contact if provided
-  if (channel === 'phone' && email?.trim()) {
-    const normalizedEmail = email.trim().toLowerCase();
-    if (!/^\S+@\S+\.\S+$/.test(normalizedEmail)) {
-      res.status(400);
-      throw new Error('Please provide a valid email');
-    }
-    const emailTaken = await Customer.findOne({ email: normalizedEmail });
-    if (emailTaken) {
-      res.status(400);
-      throw new Error('This email is already linked to another account');
-    }
-    payload.email = normalizedEmail;
-  }
-
-  if (channel === 'email' && phone?.trim()) {
-    const normalizedPhone = phone.replace(/\D/g, '').slice(-10);
-    if (!/^[0-9]{10}$/.test(normalizedPhone)) {
-      res.status(400);
-      throw new Error('Please provide a valid 10-digit phone number');
-    }
-    const phoneTaken = await Customer.findOne({ phone: normalizedPhone });
-    if (phoneTaken) {
-      res.status(400);
-      throw new Error('This phone number is already linked to another account');
-    }
-    payload.phone = normalizedPhone;
-  }
-
-  const customer = await Customer.create(payload);
-
-  if (customer.email) {
-    Promise.all([
-      sendWelcomeEmail({ email: customer.email, name: customer.name }),
-      sendRegistrationAdminEmail({ customer }),
-    ]).catch(() => {});
-  } else {
-    sendRegistrationAdminEmail({ customer }).catch(() => {});
-  }
+  Promise.all([
+    sendWelcomeEmail({ email: customer.email, name: customer.name }),
+    sendRegistrationAdminEmail({ customer }),
+  ]).catch(() => {});
 
   res.status(201).json({
     success: true,
-    isNewUser: true,
     message: 'Account created successfully',
     token: generateToken(customer._id, 'customer'),
     customer: formatCustomer(customer),
   });
 });
 
-// @desc    Get current customer profile
-// @route   GET /api/customer/auth/me
-// @access  Private (customer)
-export const getCustomerMe = asyncHandler(async (req, res) => {
-  res.json({ success: true, customer: req.customer });
+// @desc    Login with email or phone + password
+// @route   POST /api/customer/auth/login
+export const login = asyncHandler(async (req, res) => {
+  const identifier = String(req.body.identifier || req.body.email || req.body.phone || '').trim();
+  const password = String(req.body.password || '');
+
+  if (!identifier || !password) {
+    res.status(400);
+    throw new Error('Email/phone and password are required');
+  }
+
+  const isEmail = identifier.includes('@');
+  const query = isEmail
+    ? { email: identifier.toLowerCase() }
+    : { phone: normalizeIndianMobile(identifier) };
+
+  const customer = await Customer.findOne(query).select('+password');
+  if (!customer || !(await customer.matchPassword(password))) {
+    res.status(401);
+    throw new Error('Invalid email/phone or password');
+  }
+
+  if (!customer.password) {
+    res.status(401);
+    throw new Error('This account has no password set. Please register again or contact support.');
+  }
+
+  customer.lastLogin = new Date();
+  await customer.save();
+
+  if (customer.email) {
+    sendLoginAlertEmail({ email: customer.email, name: customer.name }).catch(() => {});
+  }
+
+  res.json({
+    success: true,
+    message: 'Login successful',
+    token: generateToken(customer._id, 'customer'),
+    customer: formatCustomer(customer),
+  });
 });
 
-// @desc    Update customer profile
-// @route   PUT /api/customer/auth/profile
-// @access  Private (customer)
+export const getCustomerMe = asyncHandler(async (req, res) => {
+  res.json({ success: true, customer: formatCustomer(req.customer) });
+});
+
 export const updateCustomerProfile = asyncHandler(async (req, res) => {
   const customer = await Customer.findById(req.customer._id);
   if (!customer) {
@@ -335,13 +326,15 @@ export const updateCustomerProfile = asyncHandler(async (req, res) => {
   }
 
   if (req.body.name !== undefined) customer.name = req.body.name.trim();
+  if (req.body.state !== undefined) customer.state = String(req.body.state).trim();
+  if (req.body.city !== undefined) customer.city = String(req.body.city).trim();
   if (req.body.email && !customer.email) {
     customer.email = req.body.email.trim().toLowerCase();
   }
   if (req.body.phone && !customer.phone) {
-    customer.phone = req.body.phone.replace(/\D/g, '').slice(-10);
+    customer.phone = normalizeIndianMobile(req.body.phone);
   }
 
   await customer.save();
-  res.json({ success: true, customer });
+  res.json({ success: true, customer: formatCustomer(customer) });
 });

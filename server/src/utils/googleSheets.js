@@ -55,6 +55,8 @@ const enquiryPayload = (enquiry) => ({
   address: enquiry.address || '',
   petName: enquiry.petName || '',
   category: enquiry.category || '',
+  breed: enquiry.breed || '',
+  source: enquiry.source || 'pet',
   message: enquiry.message || '',
   status: enquiry.status || 'Pending',
 });

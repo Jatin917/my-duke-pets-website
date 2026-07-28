@@ -11,6 +11,12 @@ const enquirySchema = new mongoose.Schema(
     pet: { type: mongoose.Schema.Types.ObjectId, ref: 'Pet' },
     petName: { type: String, trim: true, default: '' },
     category: { type: String, trim: true, default: '' },
+    breed: { type: String, trim: true, default: '' },
+    source: {
+      type: String,
+      enum: ['pet', 'prompt'],
+      default: 'pet',
+    },
     message: { type: String, trim: true, default: '' },
     status: {
       type: String,

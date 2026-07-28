@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { FiHeart, FiX } from 'react-icons/fi';
 import { fetchDonateSettings } from '../../services/donateService';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
+import { ENQUIRY_PROMPT_OPEN_KEY } from '../enquiry/EnquiryPrompt';
 
 const DISMISS_KEY = 'myduke_donate_prompt_dismissed';
 
@@ -11,7 +12,7 @@ const DonatePrompt = () => {
   const location = useLocation();
   const [settings, setSettings] = useState(null);
   const [open, setOpen] = useState(false);
-  const timerStarted = useRef(false);
+  const [pendingOpen, setPendingOpen] = useState(false);
 
   const onDonatePage = location.pathname === '/donate' || location.pathname === '/login';
   const visible = Boolean(open && settings && !onDonatePage);
@@ -24,7 +25,19 @@ const DonatePrompt = () => {
       .then((data) => {
         if (!cancelled) setSettings(data);
       })
-      .catch(() => {});
+      .catch(() => {
+        if (!cancelled) {
+          setSettings({
+            pageEnabled: true,
+            promptEnabled: true,
+            promptDelaySeconds: 45,
+            promptTitle: 'Support a pet today?',
+            promptMessage:
+              'Your donation helps My Duke care for animals in need — food, vet care, and rescue.',
+            promptCtaText: 'Donate Now',
+          });
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -33,17 +46,34 @@ const DonatePrompt = () => {
   useEffect(() => {
     if (!settings?.promptEnabled || !settings?.pageEnabled) return undefined;
     if (sessionStorage.getItem(DISMISS_KEY) === '1') return undefined;
-    if (timerStarted.current) return undefined;
 
-    timerStarted.current = true;
-    const delayMs = Math.max(5, Number(settings.promptDelaySeconds) || 30) * 1000;
+    const delayMs = Math.max(5, Number(settings.promptDelaySeconds) || 45) * 1000;
     const timer = setTimeout(() => {
       if (sessionStorage.getItem(DISMISS_KEY) === '1') return;
+      if (sessionStorage.getItem(ENQUIRY_PROMPT_OPEN_KEY) === '1') {
+        setPendingOpen(true);
+        return;
+      }
       setOpen(true);
     }, delayMs);
 
     return () => clearTimeout(timer);
   }, [settings]);
+
+  // If enquiry prompt closes and donate was waiting, open donate.
+  useEffect(() => {
+    if (!pendingOpen) return undefined;
+    const id = setInterval(() => {
+      if (sessionStorage.getItem(DISMISS_KEY) === '1') {
+        setPendingOpen(false);
+        return;
+      }
+      if (sessionStorage.getItem(ENQUIRY_PROMPT_OPEN_KEY) === '1') return;
+      setPendingOpen(false);
+      setOpen(true);
+    }, 400);
+    return () => clearInterval(id);
+  }, [pendingOpen]);
 
   useEffect(() => {
     if (sessionStorage.getItem(DISMISS_KEY) === '1') setOpen(false);
@@ -52,6 +82,7 @@ const DonatePrompt = () => {
 
   const dismiss = () => {
     sessionStorage.setItem(DISMISS_KEY, '1');
+    setPendingOpen(false);
     setOpen(false);
   };
 

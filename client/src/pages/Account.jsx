@@ -4,12 +4,13 @@ import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { SITE_NAME } from '../utils/constants';
+import { maskEmail, maskPhone } from '../utils/formatters';
 
 const Account = () => {
   const { customer, isAuthenticated, logout } = useCustomerAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login?return_url=/account" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return (
@@ -44,7 +45,7 @@ const Account = () => {
                   <FiMail className="text-primary-500" />
                   <div>
                     <p className="text-xs text-gray-400">Email</p>
-                    <p className="text-sm font-medium text-gray-800">{customer.email}</p>
+                    <p className="text-sm font-medium text-gray-800">{maskEmail(customer.email)}</p>
                   </div>
                 </div>
               )}
@@ -53,7 +54,7 @@ const Account = () => {
                   <FiPhone className="text-primary-500" />
                   <div>
                     <p className="text-xs text-gray-400">Phone</p>
-                    <p className="text-sm font-medium text-gray-800">+91 {customer.phone}</p>
+                    <p className="text-sm font-medium text-gray-800">{maskPhone(customer.phone)}</p>
                   </div>
                 </div>
               )}

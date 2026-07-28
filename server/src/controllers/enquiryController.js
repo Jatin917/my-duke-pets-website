@@ -71,6 +71,67 @@ export const createEnquiry = asyncHandler(async (req, res) => {
   });
 });
 
+// @desc    Create guest enquiry from timed prompt (no pet)
+// @route   POST /api/enquiry/prompt
+// @access  Public
+export const createPromptEnquiry = asyncHandler(async (req, res) => {
+  const {
+    name,
+    phone,
+    email,
+    city,
+    state,
+    address,
+    category,
+    breed,
+    message,
+  } = req.body;
+
+  let categoryName = String(category || '').trim();
+  if (/^[0-9a-fA-F]{24}$/.test(categoryName)) {
+    const cat = await Category.findById(categoryName).select('name');
+    if (cat) categoryName = cat.name;
+  }
+
+  const enquiry = await Enquiry.create({
+    name: String(name || '').trim(),
+    phone: String(phone || '').replace(/\D/g, '').slice(-10),
+    email: String(email || '').trim().toLowerCase(),
+    city: String(city || '').trim(),
+    state: String(state || '').trim(),
+    address: String(address || '').trim(),
+    category: categoryName,
+    breed: String(breed || '').trim(),
+    message: String(message || '').trim(),
+    source: 'prompt',
+    petName: '',
+  });
+
+  await Promise.all([appendEnquiryToExcel(enquiry), appendEnquiryToGoogleSheet(enquiry)]);
+
+  const emailResults = await Promise.all([
+    enquiry.email
+      ? sendEnquiryConfirmationEmail({ enquiry })
+      : Promise.resolve({ skipped: true }),
+    sendEnquiryAdminEmail({ enquiry }),
+  ]);
+
+  if (hasEmailFailure(emailResults)) {
+    await notifyDeliveryFailure({
+      userEmail: enquiry.email,
+      userName: enquiry.name,
+      context: 'prompt enquiry',
+      results: emailResults,
+    }).catch(() => {});
+  }
+
+  res.status(201).json({
+    success: true,
+    message: 'Thank you! Our team will contact you shortly.',
+    data: enquiry,
+  });
+});
+
 // @desc    Get all enquiries (admin)
 // @route   GET /api/enquiry
 // @access  Private/Admin
@@ -85,6 +146,8 @@ export const getEnquiries = asyncHandler(async (req, res) => {
       { phone: { $regex: search, $options: 'i' } },
       { email: { $regex: search, $options: 'i' } },
       { petName: { $regex: search, $options: 'i' } },
+      { breed: { $regex: search, $options: 'i' } },
+      { category: { $regex: search, $options: 'i' } },
     ];
   }
 

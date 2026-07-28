@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FiCheck, FiSend } from 'react-icons/fi';
@@ -7,6 +6,10 @@ import SEO from '../components/common/SEO';
 import Breadcrumb from '../components/common/Breadcrumb';
 import { useCustomerAuth } from '../context/CustomerAuthContext';
 import { submitHelpEnquiry } from '../services/contactService';
+import { fetchCategories } from '../services/categoryService';
+import { fetchBreeds } from '../services/breedService';
+
+const OTHER = '__other__';
 
 const steps = [
   {
@@ -58,38 +61,114 @@ const inputClass =
 
 const Help = () => {
   const { customer, isAuthenticated } = useCustomerAuth();
+  const [categories, setCategories] = useState([]);
+  const [breeds, setBreeds] = useState([]);
   const [form, setForm] = useState({
     intent: 'Buy a Pet',
-    petType: '',
+    name: '',
+    email: '',
+    phone: '',
+    category: '',
+    breed: '',
+    customBreed: '',
     city: '',
     message: '',
   });
   const [sending, setSending] = useState(false);
 
-  const updateField = (field, value) => setForm((current) => ({ ...current, [field]: value }));
+  const isOtherCategory = form.category === OTHER;
+
+  useEffect(() => {
+    fetchCategories()
+      .then((res) => setCategories(res.data || []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated || !customer) return;
+    setForm((prev) => ({
+      ...prev,
+      name: customer.name || prev.name,
+      email: customer.email || prev.email,
+      phone: customer.phone || prev.phone,
+    }));
+  }, [isAuthenticated, customer]);
+
+  useEffect(() => {
+    if (!form.category || form.category === OTHER) {
+      setBreeds([]);
+      return undefined;
+    }
+    let cancelled = false;
+    fetchBreeds({ category: form.category })
+      .then((res) => {
+        if (!cancelled) setBreeds(res.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setBreeds([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.category]);
+
+  const updateField = (field, value) =>
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      if (field === 'category') {
+        next.breed = '';
+        next.customBreed = '';
+      }
+      return next;
+    });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    const breedValue =
+      isOtherCategory || form.breed === OTHER
+        ? form.customBreed.trim()
+        : form.breed.trim();
+
+    if (!breedValue) {
+      toast.error('Please select or enter a breed');
+      return;
+    }
+
+    const categoryName =
+      isOtherCategory
+        ? 'Other'
+        : categories.find((c) => c._id === form.category)?.name || form.category;
+
     setSending(true);
     try {
-      const data = await submitHelpEnquiry(form);
+      const data = await submitHelpEnquiry({
+        intent: form.intent,
+        name: form.name.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.replace(/\D/g, '').slice(-10),
+        petType: categoryName,
+        breed: breedValue,
+        city: form.city.trim(),
+        message: form.message.trim(),
+      });
       toast.success(data.message || 'Enquiry submitted. Our team will contact you soon.');
-      setForm({
+      setForm((prev) => ({
         intent: 'Buy a Pet',
-        petType: '',
+        name: isAuthenticated ? prev.name : '',
+        email: isAuthenticated ? prev.email : '',
+        phone: isAuthenticated ? prev.phone : '',
+        category: '',
+        breed: '',
+        customBreed: '',
         city: '',
         message: '',
-      });
+      }));
     } catch (err) {
       toast.error(err?.response?.data?.message || 'Could not submit enquiry. Please try again.');
     } finally {
       setSending(false);
     }
   };
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login?return_url=/help&reason=required" replace />;
-  }
 
   return (
     <>
@@ -132,12 +211,34 @@ const Help = () => {
               className="rounded-3xl bg-white border border-gray-100 shadow-soft p-6 sm:p-8"
             >
               <h3 className="font-display text-xl font-bold text-gray-900 mb-6">Submit an Enquiry</h3>
-              <div className="mb-5 rounded-xl border border-primary-100 bg-primary-50 px-4 py-3 text-sm text-gray-600">
-                Enquiring as <strong className="text-gray-900">{customer?.name || 'Pet Parent'}</strong>
-                {customer?.email ? ` · ${customer.email}` : ''}
-                {customer?.phone ? ` · +91 ${customer.phone}` : ''}
-              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <input
+                  required
+                  value={form.name}
+                  onChange={(event) => updateField('name', event.target.value)}
+                  placeholder="Your Name *"
+                  className={inputClass}
+                />
+                <input
+                  required
+                  type="email"
+                  value={form.email}
+                  onChange={(event) => updateField('email', event.target.value)}
+                  placeholder="Email *"
+                  className={inputClass}
+                />
+                <input
+                  required
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={form.phone}
+                  onChange={(event) =>
+                    updateField('phone', event.target.value.replace(/\D/g, '').slice(0, 10))
+                  }
+                  placeholder="Mobile Number *"
+                  className={`${inputClass} sm:col-span-2`}
+                />
                 <label className="sm:col-span-2 text-sm font-medium text-gray-700">
                   I am looking to
                   <select
@@ -152,28 +253,67 @@ const Help = () => {
                 </label>
                 <select
                   required
-                  value={form.petType}
-                  onChange={(event) => updateField('petType', event.target.value)}
+                  value={form.category}
+                  onChange={(event) => updateField('category', event.target.value)}
                   className={inputClass}
                 >
-                  <option value="">Pet Type</option>
-                  {['Dog', 'Cat', 'Bird', 'Rabbit', 'Fish', 'Exotic Pet'].map((type) => (
-                    <option key={type}>{type}</option>
+                  <option value="">Category *</option>
+                  {categories.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.name}
+                    </option>
                   ))}
+                  <option value={OTHER}>Other</option>
                 </select>
+                {isOtherCategory || form.breed === OTHER ? (
+                  <input
+                    required
+                    value={form.customBreed}
+                    onChange={(event) => updateField('customBreed', event.target.value)}
+                    placeholder="Enter breed *"
+                    className={inputClass}
+                  />
+                ) : (
+                  <select
+                    required
+                    value={form.breed}
+                    onChange={(event) => updateField('breed', event.target.value)}
+                    disabled={!form.category}
+                    className={inputClass}
+                  >
+                    <option value="">
+                      {form.category ? 'Breed *' : 'Select category first'}
+                    </option>
+                    {breeds.map((b) => (
+                      <option key={b._id} value={b.name}>
+                        {b.name}
+                      </option>
+                    ))}
+                    <option value={OTHER}>Other</option>
+                  </select>
+                )}
+                {form.breed === OTHER && !isOtherCategory && (
+                  <input
+                    required
+                    value={form.customBreed}
+                    onChange={(event) => updateField('customBreed', event.target.value)}
+                    placeholder="Enter breed *"
+                    className={`${inputClass} sm:col-span-2`}
+                  />
+                )}
                 <input
                   required
                   value={form.city}
                   onChange={(event) => updateField('city', event.target.value)}
-                  placeholder="City"
-                  className="sm:col-span-2 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100"
+                  placeholder="City *"
+                  className={`${inputClass} sm:col-span-2`}
                 />
                 <textarea
                   required
                   rows={5}
                   value={form.message}
                   onChange={(event) => updateField('message', event.target.value)}
-                  placeholder="Tell Us More"
+                  placeholder="Tell Us More *"
                   className={`${inputClass} sm:col-span-2 resize-y`}
                 />
               </div>

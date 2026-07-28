@@ -5,7 +5,8 @@ import {
   sendOtp,
   verifyOtp,
   verifyMsg91,
-  completeSignup,
+  registerCustomer,
+  loginCustomer,
 } from '../services/customerAuthService';
 
 const CustomerAuthContext = createContext(null);
@@ -50,45 +51,48 @@ export const CustomerAuthProvider = ({ children }) => {
       });
   }, []);
 
-  const requestOtp = async ({ channel, email, phone }) => {
+  const requestEmailOtp = async (email) => {
     setLoading(true);
     try {
-      return await sendOtp({ channel, email, phone });
+      return await sendOtp({ email });
     } finally {
       setLoading(false);
     }
   };
 
-  const loginWithOtp = async ({ channel, email, phone, otp }) => {
+  const confirmEmailOtp = async ({ email, otp }) => {
     setLoading(true);
     try {
-      const data = await verifyOtp({ channel, email, phone, otp });
-      if (!data.isNewUser && data.token) {
-        persistSession(data.token, data.customer, setCustomer);
-      }
+      return await verifyOtp({ email, otp });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmPhoneMsg91 = async ({ accessToken, phone }) => {
+    setLoading(true);
+    try {
+      return await verifyMsg91({ accessToken, phone });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (payload) => {
+    setLoading(true);
+    try {
+      const data = await registerCustomer(payload);
+      persistSession(data.token, data.customer, setCustomer);
       return data;
     } finally {
       setLoading(false);
     }
   };
 
-  const loginWithMsg91 = async ({ accessToken, phone }) => {
+  const login = async ({ identifier, password }) => {
     setLoading(true);
     try {
-      const data = await verifyMsg91({ accessToken, phone });
-      if (!data.isNewUser && data.token) {
-        persistSession(data.token, data.customer, setCustomer);
-      }
-      return data;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const finishSignup = async ({ signupToken, name, email, phone }) => {
-    setLoading(true);
-    try {
-      const data = await completeSignup({ signupToken, name, email, phone });
+      const data = await loginCustomer({ identifier, password });
       persistSession(data.token, data.customer, setCustomer);
       return data;
     } finally {
@@ -109,10 +113,11 @@ export const CustomerAuthProvider = ({ children }) => {
     <CustomerAuthContext.Provider
       value={{
         customer,
-        requestOtp,
-        loginWithOtp,
-        loginWithMsg91,
-        finishSignup,
+        requestEmailOtp,
+        confirmEmailOtp,
+        confirmPhoneMsg91,
+        register,
+        login,
         logout,
         loading,
         isAuthenticated,
