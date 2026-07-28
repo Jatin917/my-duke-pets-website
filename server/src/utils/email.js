@@ -46,6 +46,9 @@ const buildSmtpOptions = () => {
     port: SMTP_PORT,
     secure: true,
     auth: { user, pass },
+    tls: {
+      rejectUnauthorized: false,
+    },
   };
 };
 
