@@ -1,0 +1,345 @@
+[
+  {
+    "name": "Labrador Retriever",
+    "page": 1,
+    "slot": 0,
+    "filename": "pdf-breed-labrador-retriever.jpg",
+    "path": "/uploads/pets/pdf-breed-labrador-retriever.jpg"
+  },
+  {
+    "name": "Golden Retriever",
+    "page": 1,
+    "slot": 1,
+    "filename": "pdf-breed-golden-retriever.jpg",
+    "path": "/uploads/pets/pdf-breed-golden-retriever.jpg"
+  },
+  {
+    "name": "German Shepherd",
+    "page": 1,
+    "slot": 2,
+    "filename": "pdf-breed-german-shepherd.jpg",
+    "path": "/uploads/pets/pdf-breed-german-shepherd.jpg"
+  },
+  {
+    "name": "Beagle",
+    "page": 1,
+    "slot": 3,
+    "filename": "pdf-breed-beagle.jpg",
+    "path": "/uploads/pets/pdf-breed-beagle.jpg"
+  },
+  {
+    "name": "Pug",
+    "page": 1,
+    "slot": 4,
+    "filename": "pdf-breed-pug.jpg",
+    "path": "/uploads/pets/pdf-breed-pug.jpg"
+  },
+  {
+    "name": "Rottweiler",
+    "page": 1,
+    "slot": 5,
+    "filename": "pdf-breed-rottweiler.jpg",
+    "path": "/uploads/pets/pdf-breed-rottweiler.jpg"
+  },
+  {
+    "name": "Doberman Pinscher",
+    "page": 1,
+    "slot": 6,
+    "filename": "pdf-breed-doberman-pinscher.jpg",
+    "path": "/uploads/pets/pdf-breed-doberman-pinscher.jpg"
+  },
+  {
+    "name": "Shih Tzu",
+    "page": 1,
+    "slot": 7,
+    "filename": "pdf-breed-shih-tzu.jpg",
+    "path": "/uploads/pets/pdf-breed-shih-tzu.jpg"
+  },
+  {
+    "name": "Indian Spitz",
+    "page": 1,
+    "slot": 8,
+    "filename": "pdf-breed-indian-spitz.jpg",
+    "path": "/uploads/pets/pdf-breed-indian-spitz.jpg"
+  },
+  {
+    "name": "Dachshund",
+    "page": 1,
+    "slot": 9,
+    "filename": "pdf-breed-dachshund.jpg",
+    "path": "/uploads/pets/pdf-breed-dachshund.jpg"
+  },
+  {
+    "name": "Boxer",
+    "page": 2,
+    "slot": 0,
+    "filename": "pdf-breed-boxer.jpg",
+    "path": "/uploads/pets/pdf-breed-boxer.jpg"
+  },
+  {
+    "name": "Great Dane",
+    "page": 2,
+    "slot": 1,
+    "filename": "pdf-breed-great-dane.jpg",
+    "path": "/uploads/pets/pdf-breed-great-dane.jpg"
+  },
+  {
+    "name": "Siberian Husky",
+    "page": 2,
+    "slot": 2,
+    "filename": "pdf-breed-siberian-husky.jpg",
+    "path": "/uploads/pets/pdf-breed-siberian-husky.jpg"
+  },
+  {
+    "name": "French Bulldog",
+    "page": 2,
+    "slot": 3,
+    "filename": "pdf-breed-french-bulldog.jpg",
+    "path": "/uploads/pets/pdf-breed-french-bulldog.jpg"
+  },
+  {
+    "name": "Bullmastiff",
+    "page": 2,
+    "slot": 4,
+    "filename": "pdf-breed-bullmastiff.jpg",
+    "path": "/uploads/pets/pdf-breed-bullmastiff.jpg"
+  },
+  {
+    "name": "Border Collie",
+    "page": 2,
+    "slot": 5,
+    "filename": "pdf-breed-border-collie.jpg",
+    "path": "/uploads/pets/pdf-breed-border-collie.jpg"
+  },
+  {
+    "name": "Cocker Spaniel",
+    "page": 2,
+    "slot": 6,
+    "filename": "pdf-breed-cocker-spaniel.jpg",
+    "path": "/uploads/pets/pdf-breed-cocker-spaniel.jpg"
+  },
+  {
+    "name": "Dalmatian",
+    "page": 2,
+    "slot": 7,
+    "filename": "pdf-breed-dalmatian.jpg",
+    "path": "/uploads/pets/pdf-breed-dalmatian.jpg"
+  },
+  {
+    "name": "Pomeranian",
+    "page": 2,
+    "slot": 8,
+    "filename": "pdf-breed-pomeranian.jpg",
+    "path": "/uploads/pets/pdf-breed-pomeranian.jpg"
+  },
+  {
+    "name": "Basset Hound",
+    "page": 2,
+    "slot": 9,
+    "filename": "pdf-breed-basset-hound.jpg",
+    "path": "/uploads/pets/pdf-breed-basset-hound.jpg"
+  },
+  {
+    "name": "Lhasa Apso",
+    "page": 3,
+    "slot": 0,
+    "filename": "pdf-breed-lhasa-apso.jpg",
+    "path": "/uploads/pets/pdf-breed-lhasa-apso.jpg"
+  },
+  {
+    "name": "Saint Bernard",
+    "page": 3,
+    "slot": 1,
+    "filename": "pdf-breed-saint-bernard.jpg",
+    "path": "/uploads/pets/pdf-breed-saint-bernard.jpg"
+  },
+  {
+    "name": "Akita",
+    "page": 3,
+    "slot": 2,
+    "filename": "pdf-breed-akita.jpg",
+    "path": "/uploads/pets/pdf-breed-akita.jpg"
+  },
+  {
+    "name": "Alaskan Malamute",
+    "page": 3,
+    "slot": 3,
+    "filename": "pdf-breed-alaskan-malamute.jpg",
+    "path": "/uploads/pets/pdf-breed-alaskan-malamute.jpg"
+  },
+  {
+    "name": "Bichon Frise",
+    "page": 3,
+    "slot": 4,
+    "filename": "pdf-breed-bichon-frise.jpg",
+    "path": "/uploads/pets/pdf-breed-bichon-frise.jpg"
+  },
+  {
+    "name": "Poodle (Standard)",
+    "page": 3,
+    "slot": 5,
+    "filename": "pdf-breed-poodle-standard.jpg",
+    "path": "/uploads/pets/pdf-breed-poodle-standard.jpg"
+  },
+  {
+    "name": "Chow Chow",
+    "page": 3,
+    "slot": 6,
+    "filename": "pdf-breed-chow-chow.jpg",
+    "path": "/uploads/pets/pdf-breed-chow-chow.jpg"
+  },
+  {
+    "name": "Papillon",
+    "page": 3,
+    "slot": 7,
+    "filename": "pdf-breed-papillon.jpg",
+    "path": "/uploads/pets/pdf-breed-papillon.jpg"
+  },
+  {
+    "name": "Samoyed",
+    "page": 3,
+    "slot": 8,
+    "filename": "pdf-breed-samoyed.jpg",
+    "path": "/uploads/pets/pdf-breed-samoyed.jpg"
+  },
+  {
+    "name": "Greyhound",
+    "page": 3,
+    "slot": 9,
+    "filename": "pdf-breed-greyhound.jpg",
+    "path": "/uploads/pets/pdf-breed-greyhound.jpg"
+  },
+  {
+    "name": "Bull Terrier",
+    "page": 4,
+    "slot": 0,
+    "filename": "pdf-breed-bull-terrier.jpg",
+    "path": "/uploads/pets/pdf-breed-bull-terrier.jpg"
+  },
+  {
+    "name": "Australian Shepherd",
+    "page": 4,
+    "slot": 1,
+    "filename": "pdf-breed-australian-shepherd.jpg",
+    "path": "/uploads/pets/pdf-breed-australian-shepherd.jpg"
+  },
+  {
+    "name": "Irish Setter",
+    "page": 4,
+    "slot": 2,
+    "filename": "pdf-breed-irish-setter.jpg",
+    "path": "/uploads/pets/pdf-breed-irish-setter.jpg"
+  },
+  {
+    "name": "Cane Corso",
+    "page": 4,
+    "slot": 3,
+    "filename": "pdf-breed-cane-corso.jpg",
+    "path": "/uploads/pets/pdf-breed-cane-corso.jpg"
+  },
+  {
+    "name": "Newfoundland",
+    "page": 4,
+    "slot": 4,
+    "filename": "pdf-breed-newfoundland.jpg",
+    "path": "/uploads/pets/pdf-breed-newfoundland.jpg"
+  },
+  {
+    "name": "Belgian Malinois",
+    "page": 4,
+    "slot": 5,
+    "filename": "pdf-breed-belgian-malinois.jpg",
+    "path": "/uploads/pets/pdf-breed-belgian-malinois.jpg"
+  },
+  {
+    "name": "Old English Sheepdog",
+    "page": 4,
+    "slot": 6,
+    "filename": "pdf-breed-old-english-sheepdog.jpg",
+    "path": "/uploads/pets/pdf-breed-old-english-sheepdog.jpg"
+  },
+  {
+    "name": "Pembroke Welsh Corgi",
+    "page": 4,
+    "slot": 7,
+    "filename": "pdf-breed-pembroke-welsh-corgi.jpg",
+    "path": "/uploads/pets/pdf-breed-pembroke-welsh-corgi.jpg"
+  },
+  {
+    "name": "Basenji",
+    "page": 4,
+    "slot": 8,
+    "filename": "pdf-breed-basenji.jpg",
+    "path": "/uploads/pets/pdf-breed-basenji.jpg"
+  },
+  {
+    "name": "Tibetan Mastiff",
+    "page": 4,
+    "slot": 9,
+    "filename": "pdf-breed-tibetan-mastiff.jpg",
+    "path": "/uploads/pets/pdf-breed-tibetan-mastiff.jpg"
+  },
+  {
+    "name": "Chihuahua",
+    "page": 5,
+    "slot": 0,
+    "filename": "pdf-breed-chihuahua.jpg",
+    "path": "/uploads/pets/pdf-breed-chihuahua.jpg"
+  },
+  {
+    "name": "Great Swiss Mountain Dog",
+    "page": 5,
+    "slot": 2,
+    "filename": "pdf-breed-great-swiss-mountain-dog.jpg",
+    "path": "/uploads/pets/pdf-breed-great-swiss-mountain-dog.jpg"
+  },
+  {
+    "name": "Irish Wolfhound",
+    "page": 5,
+    "slot": 3,
+    "filename": "pdf-breed-irish-wolfhound.jpg",
+    "path": "/uploads/pets/pdf-breed-irish-wolfhound.jpg"
+  },
+  {
+    "name": "Kangal",
+    "page": 5,
+    "slot": 4,
+    "filename": "pdf-breed-kangal.jpg",
+    "path": "/uploads/pets/pdf-breed-kangal.jpg"
+  },
+  {
+    "name": "Shiba Inu",
+    "page": 5,
+    "slot": 5,
+    "filename": "pdf-breed-shiba-inu.jpg",
+    "path": "/uploads/pets/pdf-breed-shiba-inu.jpg"
+  },
+  {
+    "name": "Boerboel",
+    "page": 5,
+    "slot": 6,
+    "filename": "pdf-breed-boerboel.jpg",
+    "path": "/uploads/pets/pdf-breed-boerboel.jpg"
+  },
+  {
+    "name": "Australian Cattle Dog",
+    "page": 5,
+    "slot": 7,
+    "filename": "pdf-breed-australian-cattle-dog.jpg",
+    "path": "/uploads/pets/pdf-breed-australian-cattle-dog.jpg"
+  },
+  {
+    "name": "American Bully",
+    "page": 5,
+    "slot": 8,
+    "filename": "pdf-breed-american-bully.jpg",
+    "path": "/uploads/pets/pdf-breed-american-bully.jpg"
+  },
+  {
+    "name": "Giant Schnauzer",
+    "page": 5,
+    "slot": 9,
+    "filename": "pdf-breed-giant-schnauzer.jpg",
+    "path": "/uploads/pets/pdf-breed-giant-schnauzer.jpg"
+  }
+]
