@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FaBone,
   FaCircleCheck,
@@ -8,7 +8,7 @@ import {
   FaTruckFast,
 } from 'react-icons/fa6';
 
-// Walk order: 1 → 2 → 3 → Happy Home (4) → Pet Care (5) → Adoption (6)
+// Highlight order: 1 → 2 → 3 → Happy Home (4) → Pet Care (5) → Adoption (6)
 const services = [
   {
     num: '01',
@@ -53,85 +53,7 @@ const services = [
   },
 ];
 
-// Smooth curve through arbitrary points (Catmull-Rom → cubic Bezier).
-const catmullRomPath = (points) => {
-  if (!points || points.length < 2) return '';
-  let d = `M${points[0].x},${points[0].y}`;
-  for (let i = 0; i < points.length - 1; i += 1) {
-    const p0 = points[i - 1] || points[i];
-    const p1 = points[i];
-    const p2 = points[i + 1];
-    const p3 = points[i + 2] || p2;
-    const c1x = p1.x + (p2.x - p0.x) / 6;
-    const c1y = p1.y + (p2.y - p0.y) / 6;
-    const c2x = p2.x - (p3.x - p1.x) / 6;
-    const c2y = p2.y - (p3.y - p1.y) / 6;
-    d += ` C${c1x},${c1y} ${c2x},${c2y} ${p2.x},${p2.y}`;
-  }
-  return d;
-};
-
-const buildLengthTable = (pathEl, samples = 100) => {
-  const total = pathEl.getTotalLength();
-  const table = [];
-  for (let i = 0; i <= samples; i += 1) {
-    const len = (i / samples) * total;
-    const pt = pathEl.getPointAtLength(len);
-    table.push({ len, x: pt.x, y: pt.y });
-  }
-  return { total, table };
-};
-
-const nearestFraction = (table, total, x, y) => {
-  let bestLen = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < table.length; i += 1) {
-    const s = table[i];
-    const d = (s.x - x) ** 2 + (s.y - y) ** 2;
-    if (d < bestDist) {
-      bestDist = d;
-      bestLen = s.len;
-    }
-  }
-  return total ? bestLen / total : 0;
-};
-
-const AUTO_DURATION_MS = 22000; // full lap time
-const CHECKPOINT_WINDOW = 0.05;
-
-/** Side-view pup mascot — flips with facing via scaleX (no emoji). */
-const PathDog = ({ facing }) => (
-  <svg
-    viewBox="0 0 96 72"
-    className="h-12 w-auto drop-shadow-lg sm:h-14 lg:h-16"
-    style={{
-      display: 'block',
-      transform: facing === 'left' ? 'scaleX(-1)' : 'none',
-    }}
-    aria-hidden="true"
-  >
-    <path d="M12 38c-6-2-9-8-8-14 4 2 8 6 10 12z" fill="#8B5A2B" />
-    <ellipse cx="28" cy="58" rx="7" ry="9" fill="#6F4420" />
-    <ellipse cx="42" cy="40" rx="26" ry="16" fill="#A0522D" />
-    <ellipse cx="40" cy="38" rx="18" ry="10" fill="#C68642" opacity="0.55" />
-    <ellipse cx="58" cy="58" rx="6.5" ry="9" fill="#6F4420" />
-    <ellipse cx="68" cy="28" rx="16" ry="14" fill="#A0522D" />
-    <path d="M58 18c-2-10 4-16 10-14 1 6-2 12-8 16z" fill="#6F4420" />
-    <path d="M60 18c-1-6 3-10 7-9 0 4-1 8-5 11z" fill="#D4A574" />
-    <ellipse cx="80" cy="30" rx="9" ry="7" fill="#E8C49A" />
-    <ellipse cx="88" cy="28" rx="3.2" ry="2.4" fill="#2A1A12" />
-    <circle cx="72" cy="24" r="2.4" fill="#1A120C" />
-    <circle cx="72.7" cy="23.3" r="0.7" fill="#fff" />
-    <path
-      d="M56 36c6 4 14 4 20 0"
-      fill="none"
-      stroke="#EA580C"
-      strokeWidth="3"
-      strokeLinecap="round"
-    />
-    <circle cx="76" cy="36" r="2.5" fill="#FBBF24" />
-  </svg>
-);
+const HIGHLIGHT_MS = 3200;
 
 // Boustrophedon (snake) grid placement so row transitions drop straight down.
 const PLACEMENT = [
@@ -143,11 +65,10 @@ const PLACEMENT = [
   'sm:col-start-2 sm:row-start-3 lg:col-start-1 lg:row-start-2',
 ];
 
-const Box = ({ service, isActive, placement, refCb, onHoverStart, onHoverEnd }) => {
+const Box = ({ service, isActive, placement, onHoverStart, onHoverEnd }) => {
   const Icon = service.icon;
   return (
     <div
-      ref={refCb}
       onMouseEnter={onHoverStart}
       onMouseLeave={onHoverEnd}
       className={`group relative flex h-40 flex-col overflow-hidden rounded-2xl border p-4 transition-all duration-300 sm:h-44 sm:p-5 lg:h-48 ${placement} ${
@@ -188,80 +109,11 @@ const Box = ({ service, isActive, placement, refCb, onHoverStart, onHoverEnd }) 
 
 const ServicesTrack = () => {
   const containerRef = useRef(null);
-  const boxRefs = useRef([]);
-  const pathRef = useRef(null);
-  const dogRef = useRef(null);
-
   const visibleRef = useRef(false);
-  const rafRef = useRef(0);
-  const frameSkipRef = useRef(0);
-
-  const progressRef = useRef(0);
-  const posRef = useRef({ x: 0, y: 0 });
-  const facingRef = useRef('right');
-  const activeDogRef = useRef(null);
-
-  const totalLenRef = useRef(0);
-  const tableRef = useRef(null);
-  const checkpointFractionsRef = useRef([]);
-  const centersRef = useRef([]);
-  const readyRef = useRef(false);
-
-  const [pathD, setPathD] = useState('');
-  const [facing, setFacing] = useState('right');
   const [hoverActive, setHoverActive] = useState(null);
-  const [dogActive, setDogActive] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  const displayedActive = hoverActive !== null ? hoverActive : dogActive;
-
-  const measure = useCallback(() => {
-    const cont = containerRef.current;
-    if (!cont) return;
-    const cb = cont.getBoundingClientRect();
-    const centers = boxRefs.current
-      .filter(Boolean)
-      .map((el) => {
-        const r = el.getBoundingClientRect();
-        return {
-          x: r.left - cb.left + r.width / 2,
-          y: r.top - cb.top + r.height / 2,
-        };
-      });
-    if (centers.length < services.length) return;
-    centersRef.current = centers;
-    setPathD(catmullRomPath(centers));
-  }, []);
-
-  useLayoutEffect(() => {
-    measure();
-    const cont = containerRef.current;
-    if (!cont || typeof ResizeObserver === 'undefined') {
-      window.addEventListener('resize', measure);
-      return () => window.removeEventListener('resize', measure);
-    }
-    const ro = new ResizeObserver(() => measure());
-    ro.observe(cont);
-    window.addEventListener('resize', measure);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-  }, [measure]);
-
-  // Rebuild the length lookup whenever the path (layout) changes.
-  useEffect(() => {
-    if (!pathD || !pathRef.current) return;
-    const { total, table } = buildLengthTable(pathRef.current);
-    totalLenRef.current = total;
-    tableRef.current = table;
-    checkpointFractionsRef.current = centersRef.current.map((pt) =>
-      nearestFraction(table, total, pt.x, pt.y)
-    );
-    readyRef.current = true;
-    if (centersRef.current[0]) {
-      posRef.current = { ...centersRef.current[0] };
-    }
-  }, [pathD]);
+  const displayedActive = hoverActive !== null ? hoverActive : activeIndex;
 
   useEffect(() => {
     const el = containerRef.current;
@@ -277,57 +129,12 @@ const ServicesTrack = () => {
   }, []);
 
   useEffect(() => {
-    let last = performance.now();
-    const tick = (now) => {
-      rafRef.current = requestAnimationFrame(tick);
-      if (!readyRef.current || !pathRef.current || !visibleRef.current) return;
+    const id = setInterval(() => {
+      if (!visibleRef.current) return;
       if (document.visibilityState !== 'visible') return;
-      frameSkipRef.current ^= 1;
-      if (frameSkipRef.current === 0) return;
-
-      const delta = Math.min(now - last, 40);
-      last = now;
-      const total = totalLenRef.current;
-      if (!total) return;
-
-      const fractions = checkpointFractionsRef.current;
-      let minDist = Infinity;
-      let newActive = null;
-      for (let i = 0; i < fractions.length; i += 1) {
-        const dist = Math.abs(progressRef.current - fractions[i]);
-        if (dist < minDist) minDist = dist;
-        if (dist < CHECKPOINT_WINDOW) newActive = i;
-      }
-      // Slow right down at each box so the description stays readable.
-      const speedFactor = minDist < CHECKPOINT_WINDOW ? 0.12 : 1;
-      let next = progressRef.current + (delta / AUTO_DURATION_MS) * speedFactor;
-      if (next >= 1) {
-        next = 0;
-        facingRef.current = 'right';
-        setFacing('right');
-      }
-      progressRef.current = next;
-      if (newActive !== activeDogRef.current) {
-        activeDogRef.current = newActive;
-        setDogActive(newActive);
-      }
-
-      const pt = pathRef.current.getPointAtLength(progressRef.current * total);
-      const prev = posRef.current;
-      if (Math.abs(pt.x - prev.x) > 0.4) {
-        const nextFacing = pt.x > prev.x ? 'right' : 'left';
-        if (facingRef.current !== nextFacing) {
-          facingRef.current = nextFacing;
-          setFacing(nextFacing);
-        }
-      }
-      posRef.current = { x: pt.x, y: pt.y };
-      if (dogRef.current) {
-        dogRef.current.style.transform = `translate3d(${pt.x}px, ${pt.y}px, 0) translate(-50%, -50%)`;
-      }
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
+      setActiveIndex((i) => (i + 1) % services.length);
+    }, HIGHLIGHT_MS);
+    return () => clearInterval(id);
   }, []);
 
   return (
@@ -335,43 +142,16 @@ const ServicesTrack = () => {
       ref={containerRef}
       className="relative mx-auto grid w-full max-w-6xl grid-cols-1 gap-x-10 gap-y-8 px-4 sm:grid-cols-2 sm:gap-x-14 lg:grid-cols-3 lg:gap-x-16 lg:gap-y-12"
     >
-      <svg
-        className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
-        aria-hidden="true"
-      >
-        {pathD && (
-          <>
-            <path d={pathD} fill="none" stroke="#241f34" strokeWidth={16} strokeLinecap="round" />
-            <path
-              ref={pathRef}
-              d={pathD}
-              fill="none"
-              stroke="#fbbf24"
-              strokeWidth={3}
-              strokeDasharray="10 12"
-              strokeLinecap="round"
-            />
-          </>
-        )}
-      </svg>
-
       {services.map((service, index) => (
         <Box
           key={service.num}
           service={service}
           placement={PLACEMENT[index]}
           isActive={displayedActive === index}
-          refCb={(el) => {
-            boxRefs.current[index] = el;
-          }}
           onHoverStart={() => setHoverActive(index)}
           onHoverEnd={() => setHoverActive(null)}
         />
       ))}
-
-      <div ref={dogRef} className="pointer-events-none absolute left-0 top-0 z-40 will-change-transform">
-        <PathDog facing={facing} />
-      </div>
     </div>
   );
 };
@@ -399,8 +179,7 @@ const ServicesSlide = () => (
           </h2>
         </div>
         <p className="hidden max-w-sm text-sm leading-relaxed text-gray-500 sm:block sm:text-right sm:text-[15px]">
-          Follow the pup between the stops — every box opens up as it arrives, or hover any box to
-          peek inside.
+          Each stop lights up in turn — hover any card to peek inside.
         </p>
       </div>
 
