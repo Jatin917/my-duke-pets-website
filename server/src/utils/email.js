@@ -112,14 +112,13 @@ export const verifySmtpOnStartup = async () => {
       opts.host,
       `port ${SMTP_PORT}`,
       'SSL/TLS',
-      opts.auth.user
+      opts.auth.user,
+      SMTP_PASSWORD, SMTP_USER
     );
     try {
       await transport.verify();
-      console.log('[email] SMTP connection successful:', opts.host);
     } catch (err) {
       console.error('[email] SMTP verify failed:', formatEmailError(err));
-      console.error('[email] Tip: Hostinger SMTP uses port 465 with SSL/TLS. Check SMTP_USER / SMTP_PASSWORD.');
       return false;
     }
     console.log('[email] SMTP verified:', opts.host);
