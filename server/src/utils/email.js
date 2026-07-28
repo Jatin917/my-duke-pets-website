@@ -120,7 +120,7 @@ export const verifySmtpOnStartup = async () => {
       await transport.verify();
     } catch (err) {
       console.error('[email] SMTP verify failed:', formatEmailError(err));
-      console.error('[email] Tip: Hostinger SMTP uses port 465 with SSL/TLS. Check SMTP_USER / SMTP_PASSWORD. ', SMTP_USER, SMTP_PASSWORD);
+      console.error('[email] Tip: Hostinger SMTP uses port 465 with SSL/TLS. Check SMTP_USER / SMTP_PASSWORD. ', rawUser, rawPass);
       return false;
     }
     console.log('[email] SMTP verified:', opts.host);
