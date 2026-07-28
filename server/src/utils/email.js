@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer';
 
 const SITE_NAME = process.env.SITE_NAME || 'My Duke';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+import dotenv from 'dotenv';
+dotenv.config();
 
 let smtpTransport = null;
 
