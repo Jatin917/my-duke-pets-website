@@ -10,6 +10,7 @@
     "seed": "node src/seed/seed.js",
     "seed:destroy": "node src/seed/seed.js --destroy",
     "import:dogs-pdf": "node scripts/importDogsFromPdf.js",
+    "import:birds": "node scripts/importBirds.js",
     "test:email": "node scripts/send-test-email.js"
   },
   "dependencies": {

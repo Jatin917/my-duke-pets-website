@@ -20,6 +20,12 @@ Thumbs.db
 # Uploads & generated exports (keep folder placeholders)
 server/uploads/**
 !server/uploads/**/.gitkeep
+# Breed listing photos used by production pet cards
+!server/uploads/pets/
+!server/uploads/pets/web-breed-*.jpg
+!server/uploads/pets/web-breed-*.jpeg
+!server/uploads/pets/web-bird-*.jpg
+!server/uploads/pets/web-bird-*.jpeg
 server/exports/**
 !server/exports/.gitkeep
 

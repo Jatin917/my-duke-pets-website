@@ -7,6 +7,10 @@ uploads/pets/*
 uploads/categories/*
 !uploads/pets/.gitkeep
 !uploads/categories/.gitkeep
+!uploads/pets/web-breed-*.jpg
+!uploads/pets/web-breed-*.jpeg
+!uploads/pets/web-bird-*.jpg
+!uploads/pets/web-bird-*.jpeg
 exports/*.xlsx
 npm-debug.log*
 .DS_Store
