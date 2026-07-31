@@ -3,6 +3,12 @@ import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { FiMapPin, FiPhone, FiMail, FiSend } from 'react-icons/fi';
 import SectionHeading from './SectionHeading';
+import {
+  CONTACT_EMAIL,
+  PHONE_NUMBER,
+  PHONE_NUMBERS,
+  SITE_ADDRESS,
+} from '../../utils/constants';
 
 const ContactSection = () => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -17,6 +23,8 @@ const ContactSection = () => {
       setSending(false);
     }, 900);
   };
+
+  const phoneText = PHONE_NUMBERS.length ? PHONE_NUMBERS.join(' · ') : PHONE_NUMBER;
 
   return (
     <section id="enquiries" className="py-20 bg-white scroll-mt-28 sm:scroll-mt-32">
@@ -35,9 +43,9 @@ const ContactSection = () => {
             className="space-y-5"
           >
             {[
-              { icon: FiMapPin, title: 'Visit Us', text: '123 Pet Street, Bengaluru, Karnataka, India' },
-              { icon: FiPhone, title: 'Call Us', text: '+91 99999 99999' },
-              { icon: FiMail, title: 'Email Us', text: 'hello@petnest.com' },
+              { icon: FiMapPin, title: 'Visit Us', text: SITE_ADDRESS },
+              { icon: FiPhone, title: 'Call Us', text: phoneText },
+              { icon: FiMail, title: 'Email Us', text: CONTACT_EMAIL },
             ].map((item) => (
               <div key={item.title} className="flex items-start gap-4 p-5 rounded-2xl bg-gray-50">
                 <div className="w-12 h-12 rounded-xl bg-gradient-primary text-white flex items-center justify-center text-xl shrink-0">
@@ -54,7 +62,7 @@ const ContactSection = () => {
                 title="map"
                 className="w-full h-full"
                 loading="lazy"
-                src="https://maps.google.com/maps?q=Bengaluru&t=&z=11&ie=UTF8&iwloc=&output=embed"
+                src="https://maps.google.com/maps?q=Sukhrali%20Sector%2017C%20Gurugram%20Haryana&t=&z=14&ie=UTF8&iwloc=&output=embed"
               />
             </div>
           </motion.div>

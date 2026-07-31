@@ -48,7 +48,7 @@ const Privacy = () => (
         <section>
           <h2 className="text-xl font-bold text-gray-800 mb-2">5. Contact Us</h2>
           <p>
-            For any privacy-related questions, please reach out to us at hello@petnest.com.
+            For any privacy-related questions, please reach out to us at admin@mydukepetsolution.com.
           </p>
         </section>
       </div>

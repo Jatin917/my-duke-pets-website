@@ -12,18 +12,27 @@ import {
   FACEBOOK_URL,
   INSTAGRAM_URL,
   PHONE_LINK,
-  PHONE_NUMBER,
+  PHONE_NUMBERS,
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_LINK,
+  SITE_ADDRESS,
   SITE_NAME,
   WHATSAPP_LINK,
+  phoneLink,
 } from '../utils/constants';
 
 const inputClass =
   'w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-800 outline-none transition focus:border-primary-400 focus:ring-2 focus:ring-primary-100';
 
 const contactDetails = [
-  { icon: FiPhone, label: 'Call Us', value: PHONE_NUMBER, href: PHONE_LINK },
-  { icon: FiMail, label: 'Email', value: 'hello@myduke.in', href: 'mailto:hello@myduke.in' },
-  { icon: FiMapPin, label: 'Based In', value: 'India' },
+  ...PHONE_NUMBERS.map((num, i) => ({
+    icon: FiPhone,
+    label: i === 0 ? 'Call Us' : 'Mobile',
+    value: num,
+    href: phoneLink(num),
+  })),
+  { icon: FiMail, label: 'Email', value: CONTACT_EMAIL, href: CONTACT_EMAIL_LINK },
+  { icon: FiMapPin, label: 'Visit Us', value: SITE_ADDRESS },
   { icon: FiClock, label: 'Support Hours', value: 'Mon – Sat, 9 AM – 7 PM' },
 ];
 

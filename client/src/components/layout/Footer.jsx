@@ -1,6 +1,17 @@
 import { Link } from 'react-router-dom';
 import { FiFacebook, FiInstagram, FiMapPin, FiPhone, FiMail } from 'react-icons/fi';
-import { SITE_NAME, PHONE_NUMBER, FACEBOOK_URL, INSTAGRAM_URL } from '../../utils/constants';
+import {
+  SITE_NAME,
+  PHONE_NUMBER,
+  PHONE_NUMBER_2,
+  PHONE_NUMBERS,
+  CONTACT_EMAIL,
+  CONTACT_EMAIL_LINK,
+  SITE_ADDRESS,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
+  phoneLink,
+} from '../../utils/constants';
 import BrandLogo from '../common/BrandLogo';
 
 const socialLinks = [
@@ -10,6 +21,9 @@ const socialLinks = [
 
 const Footer = () => {
   const year = new Date().getFullYear();
+  const phones = PHONE_NUMBERS.length
+    ? PHONE_NUMBERS
+    : [PHONE_NUMBER, PHONE_NUMBER_2].filter(Boolean);
 
   return (
     <footer className="bg-dark-900 text-gray-300 pt-16 pb-8">
@@ -70,18 +84,20 @@ const Footer = () => {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2">
                 <FiMapPin className="mt-1 text-primary-400 shrink-0" />
-                <span>123 Pet Street, Bengaluru, Karnataka, India</span>
+                <span>{SITE_ADDRESS}</span>
               </li>
-              <li className="flex items-center gap-2">
-                <FiPhone className="text-primary-400 shrink-0" />
-                <a href={`tel:${PHONE_NUMBER}`} className="hover:text-primary-400 transition">
-                  {PHONE_NUMBER}
-                </a>
-              </li>
+              {phones.map((num) => (
+                <li key={num} className="flex items-center gap-2">
+                  <FiPhone className="text-primary-400 shrink-0" />
+                  <a href={phoneLink(num)} className="hover:text-primary-400 transition">
+                    {num}
+                  </a>
+                </li>
+              ))}
               <li className="flex items-center gap-2">
                 <FiMail className="text-primary-400 shrink-0" />
-                <a href="mailto:hello@petnest.com" className="hover:text-primary-400 transition">
-                  hello@petnest.com
+                <a href={CONTACT_EMAIL_LINK} className="hover:text-primary-400 transition">
+                  {CONTACT_EMAIL}
                 </a>
               </li>
             </ul>

@@ -5,6 +5,18 @@ export const SITE_URL = (
 ).replace(/\/$/, '');
 export const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '919999999999';
 export const PHONE_NUMBER = import.meta.env.VITE_PHONE_NUMBER || '+919999999999';
+/** Optional second mobile shown in footer / contact */
+export const PHONE_NUMBER_2 = import.meta.env.VITE_PHONE_NUMBER_2 || '';
+/** Public contact email — mirrors server ADMIN_NOTIFY_EMAIL */
+export const CONTACT_EMAIL =
+  import.meta.env.VITE_ADMIN_NOTIFY_EMAIL ||
+  import.meta.env.VITE_CONTACT_EMAIL ||
+  'admin@mydukepetsolution.com';
+export const SITE_ADDRESS =
+  import.meta.env.VITE_SITE_ADDRESS ||
+  'Sukhrali near Mata wali Gali, Sector 17C, Gurugram, Haryana';
+
+export const PHONE_NUMBERS = [PHONE_NUMBER, PHONE_NUMBER_2].filter(Boolean);
 
 export const DEFAULT_SEO_DESCRIPTION =
   'Buy & sell verified dogs, cats, birds, rabbits, fish and exotic pets across India on My Duke. Healthy, vaccinated pets from genuine sellers — trusted pet marketplace near you.';
@@ -34,6 +46,8 @@ export const WHATSAPP_LINK = (message = 'Hello, I am interested in your pet.') =
   `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 
 export const PHONE_LINK = `tel:${PHONE_NUMBER}`;
+export const phoneLink = (number) => `tel:${String(number).replace(/\s/g, '')}`;
+export const CONTACT_EMAIL_LINK = `mailto:${CONTACT_EMAIL}`;
 
 export const FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61592086103682';
 export const INSTAGRAM_URL = 'https://www.instagram.com/mydukepetsolution/';

@@ -107,6 +107,16 @@ html.scroll-locked body {
   }
 }
 
+/* Slow cinematic zoom/pan on category card photos (~8s loop) */
+@keyframes categoryKenBurns {
+  0% {
+    transform: scale(1.08) translate(0%, 0%);
+  }
+  100% {
+    transform: scale(1.2) translate(-2.5%, -1.5%);
+  }
+}
+
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -18,7 +18,9 @@ import Help from './pages/Help';
 import NotFound from './pages/NotFound';
 
 const ScrollToTop = () => {
-  const { pathname, hash } = useLocation();
+  const { pathname, hash, search } = useLocation();
+  const page = new URLSearchParams(search).get('page') || '1';
+
   useEffect(() => {
     if (hash) {
       requestAnimationFrame(() => {
@@ -26,8 +28,9 @@ const ScrollToTop = () => {
       });
       return;
     }
-    window.scrollTo(0, 0);
-  }, [pathname, hash]);
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [pathname, hash, page]);
+
   return null;
 };
 
