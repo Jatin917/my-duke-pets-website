@@ -8,9 +8,11 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node src/seed/seed.js",
-    "seed:destroy": "node src/seed/seed.js --destroy",
+    "seed:destroy": "node src/seed/seed.js --destroy --force-wipe",
     "import:dogs-pdf": "node scripts/importDogsFromPdf.js",
-    "import:birds": "node scripts/importBirds.js",
+    "import:dogs": "node scripts/upsertDogsWithWebImages.js",
+    "import:birds": "node scripts/upsertBirdsWithWebImages.js",
+    "import:birds:download": "node scripts/importBirds.js",
     "test:email": "node scripts/send-test-email.js"
   },
   "dependencies": {

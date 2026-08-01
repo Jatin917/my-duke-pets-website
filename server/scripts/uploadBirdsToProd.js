@@ -1,7 +1,6 @@
 /**
- * Upload all PDF dog breeds to PRODUCTION via admin API (correct Mongo DB + image files).
- *
- *   node scripts/uploadDogsToProd.js
+ * Upload birds from petBirds.json to PRODUCTION via admin API.
+ *   node scripts/uploadBirdsToProd.js
  */
 import fs from 'fs';
 import path from 'path';
@@ -15,34 +14,20 @@ const API = process.env.PROD_API_URL || 'https://api.mydukepetsolution.com/api';
 const EMAIL = process.env.ADMIN_EMAIL;
 const PASSWORD = process.env.ADMIN_PASSWORD;
 const petsDir = path.join(__dirname, '..', 'uploads', 'pets');
-const breeds = JSON.parse(fs.readFileSync(path.join(__dirname, 'dogPdfBreeds.json'), 'utf8')).filter(
-  (b) => !b.skip && b.priceMin != null
-);
+const birds = JSON.parse(fs.readFileSync(path.join(__dirname, 'petBirds.json'), 'utf8'));
 
-const mid = (a, b) => Math.round((a + b) / 2 / 500) * 500;
+const midPrice = (min, max) => Math.round((Number(min) + Number(max)) / 2 / 100) * 100;
 const slugify = (n) =>
   n
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
 
-const sizeFromWeight = (weight) => {
-  const nums = String(weight || '')
-    .match(/[\d.]+/g)
-    ?.map(Number);
-  if (!nums?.length) return 'Medium';
-  const avg = nums.reduce((x, y) => x + y, 0) / nums.length;
-  if (avg < 10) return 'Small';
-  if (avg < 25) return 'Medium';
-  if (avg < 45) return 'Large';
-  return 'Giant';
-};
-
 const imageFilesFor = (name) => {
   const slug = slugify(name);
   return fs
     .readdirSync(petsDir)
-    .filter((f) => f.startsWith(`web-breed-${slug}-`) && /\.(jpe?g|png|webp)$/i.test(f))
+    .filter((f) => f.startsWith(`web-bird-${slug}-`) && /\.(jpe?g|png|webp)$/i.test(f))
     .sort()
     .slice(0, 3)
     .map((f) => path.join(petsDir, f));
@@ -61,23 +46,23 @@ async function login() {
   return token;
 }
 
-async function getDogsCategoryId(token) {
+async function getBirdsCategoryId(token) {
   const res = await fetch(`${API}/categories`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   const json = await res.json();
   const list = json.data || json.categories || json;
-  const dogs = list.find((c) => c.name === 'Dogs' || c.slug === 'dogs');
-  if (!dogs) throw new Error('Dogs category not found');
-  return dogs._id;
+  const birdsCat = list.find((c) => c.name === 'Birds' || c.slug === 'birds');
+  if (!birdsCat) throw new Error('Birds category not found');
+  return birdsCat._id;
 }
 
-async function listExistingDogBreeds() {
+async function listExistingBirdBreeds() {
   const names = new Set();
   let page = 1;
   let pages = 1;
   do {
-    const res = await fetch(`${API}/pets?category=dogs&limit=50&page=${page}`);
+    const res = await fetch(`${API}/pets?category=birds&limit=50&page=${page}`);
     const json = await res.json();
     const pets = json.data || [];
     pets.forEach((p) => names.add((p.breed || p.name || '').toLowerCase()));
@@ -96,7 +81,6 @@ async function ensureBreed(token, categoryId, name, order) {
     },
     body: JSON.stringify({ name, category: categoryId, isActive: true, order }),
   });
-  // ignore duplicate errors
   if (!res.ok) {
     const t = await res.text();
     if (!/duplicate|exists|E11000/i.test(t)) {
@@ -108,34 +92,33 @@ async function ensureBreed(token, categoryId, name, order) {
 async function createPet(token, categoryId, b, order) {
   const files = imageFilesFor(b.name);
   const form = new FormData();
-  const price = mid(b.priceMin, b.priceMax);
+  const price = midPrice(b.priceMin, b.priceMax);
 
   form.append('name', b.name);
   form.append('breed', b.name);
   form.append('category', categoryId);
   form.append('age', 'Available on enquiry');
   form.append('gender', 'Unknown');
-  form.append('weight', b.weight || '');
+  form.append('weight', b.size || '');
   form.append('price', String(price));
-  form.append('vaccinationStatus', 'Vaccinated');
+  form.append('vaccinationStatus', 'Not Vaccinated');
   form.append('healthStatus', 'Healthy');
   form.append('temperament', b.temperament || '');
-  form.append('foodPreference', b.food || '');
+  form.append('foodPreference', b.diet || '');
   form.append(
     'description',
     [
-      `${b.name} — origin ${b.origin}.`,
+      `${b.name} (${b.scientificName}) — origin ${b.origin}.`,
       `Temperament: ${b.temperament}.`,
-      `Height ${b.height}, weight ${b.weight}, lifespan ${b.lifespan}.`,
-      `Family friendly: ${b.familyFriendly}. Good with kids: ${b.goodWithKids}. Good with other pets: ${b.goodWithPets}. Apartment friendly: ${b.apartmentFriendly}.`,
+      `Size ${b.size}, lifespan ${b.lifespan}. Best for: ${b.bestFor}.`,
+      `Diet: ${b.diet}.`,
       `Typical price in India: ₹${b.priceMin.toLocaleString('en-IN')} – ₹${b.priceMax.toLocaleString('en-IN')}.`,
-      `Watch for: ${b.health}.`,
     ].join(' ')
   );
-  form.append('additionalNotes', `Origin: ${b.origin}. Source: Pet Dogs of India breed guide.`);
+  form.append('additionalNotes', `Scientific name: ${b.scientificName}. Best for: ${b.bestFor}.`);
   form.append('availability', 'true');
-  form.append('featured', order < 6 ? 'true' : 'false');
-  form.append('size', sizeFromWeight(b.weight));
+  form.append('featured', order < 4 ? 'true' : 'false');
+  form.append('size', b.size || '');
   form.append('lifespan', b.lifespan || '');
   form.append('deliveryEstimate', 'Contact us for availability & delivery');
   form.append('seoTitle', `Buy ${b.name} in India | My Duke`);
@@ -146,9 +129,9 @@ async function createPet(token, categoryId, b, order) {
   form.append(
     'careTips',
     JSON.stringify([
-      { title: 'Daily care', text: b.careTips },
-      { title: 'Grooming', text: b.grooming },
-      { title: 'Exercise', text: b.exercise },
+      { title: 'Daily care', text: `Best for ${b.bestFor}. Provide clean water, fresh food, and social time.` },
+      { title: 'Diet', text: b.diet },
+      { title: 'Space', text: `Adult size about ${b.size}. Use an appropriately sized cage with room to fly/climb.` },
     ])
   );
 
@@ -179,18 +162,18 @@ async function main() {
   console.log(`API ${API}`);
   const token = await login();
   console.log('Logged in');
-  const categoryId = await getDogsCategoryId(token);
-  console.log('Dogs category', categoryId);
+  const categoryId = await getBirdsCategoryId(token);
+  console.log('Birds category', categoryId);
 
-  const existing = await listExistingDogBreeds();
-  console.log('Existing dog breeds on prod:', existing.size);
+  const existing = await listExistingBirdBreeds();
+  console.log('Existing bird breeds on prod:', existing.size, [...existing].join(', '));
 
   let created = 0;
   let skipped = 0;
   let failed = 0;
 
-  for (let i = 0; i < breeds.length; i++) {
-    const b = breeds[i];
+  for (let i = 0; i < birds.length; i++) {
+    const b = birds[i];
     if (existing.has(b.name.toLowerCase())) {
       console.log(`skip existing ${b.name}`);
       skipped += 1;
@@ -207,8 +190,8 @@ async function main() {
     }
   }
 
-  const after = await listExistingDogBreeds();
-  console.log(`\nDone created=${created} skipped=${skipped} failed=${failed} totalNow=${after.size}`);
+  const after = await listExistingBirdBreeds();
+  console.log(`\nDone created=${created} skipped=${skipped} failed=${failed} totalBirdsNow=${after.size}`);
 }
 
 main().catch((e) => {
