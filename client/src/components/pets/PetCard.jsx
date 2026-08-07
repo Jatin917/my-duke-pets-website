@@ -29,8 +29,11 @@ const PetCard = ({ pet, onEnquire }) => {
           {images.length > 0 ? (
             <img
               src={resolveImageUrl(images[imgIndex] || images[0])}
-              alt={pet.name}
+              alt={`${pet.name}${pet.breed ? ` — ${pet.breed}` : ''} for sale in India`}
               loading="lazy"
+              decoding="async"
+              width={480}
+              height={320}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (

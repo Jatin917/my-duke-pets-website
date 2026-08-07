@@ -1,0 +1,25 @@
+My Duke — Google Business Profile / Search Console checklist
+============================================================
+
+NAP (keep identical everywhere)
+- Name: My Duke
+- Address: Sukhrali near Mata wali Gali, Sector 17C, Gurugram, Haryana
+- Phone: use the same number as VITE_PHONE_NUMBER / site footer
+- Website: https://mydukepetsolution.com
+- Category: Pet store (or Pet breeder if more accurate)
+
+Google Search Console
+1. Add property: https://mydukepetsolution.com
+2. Verify via HTML tag: set VITE_GOOGLE_SITE_VERIFICATION in client/.env then rebuild
+   OR upload the HTML file Google gives you into client/public/
+3. Submit sitemaps:
+   - https://mydukepetsolution.com/sitemap.xml
+   - https://api.mydukepetsolution.com/sitemap.xml
+4. Request indexing for /, /pets, /pets-in-gurugram, /contact, and top pet URLs
+5. Prefer one host (apex without www) and redirect the other
+
+Google Business Profile
+1. Create/claim listing at business.google.com for the Gurugram address
+2. Add photos of shop + pets weekly
+3. Ask buyers for reviews
+4. Link Instagram/Facebook same as the website footer

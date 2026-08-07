@@ -40,6 +40,9 @@ export const DEFAULT_SEO_KEYWORDS = [
   'cats for sale',
   'birds for sale',
   'exotic pets India',
+  'pet shop Gurgaon',
+  'pets for sale Gurugram',
+  'buy puppy Delhi NCR',
 ].join(', ');
 
 export const WHATSAPP_LINK = (message = 'Hello, I am interested in your pet.') =>

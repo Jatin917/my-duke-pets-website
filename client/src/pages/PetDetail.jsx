@@ -57,6 +57,11 @@ const PetDetail = () => {
 
   const comparing = isComparing(pet._id);
   const hasVideo = Boolean(getVideoEmbed(pet.videoUrl));
+  const petPath = `/pets/${pet.slug || pet._id || id}`;
+  const breedSlug = String(pet.breed || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
   return (
     <>
@@ -65,12 +70,12 @@ const PetDetail = () => {
         description={
           pet.seoDescription ||
           pet.description ||
-          `${pet.name} — ${pet.breed?.name || 'pet'} available on My Duke. Healthy, verified listing with photos and details.`
+          `${pet.name} — ${pet.breed || 'pet'} available on My Duke. Healthy, verified listing with photos and details.`
         }
         image={pet.images?.[0]}
-        path={`/pets/${pet._id || pet.id || id}`}
+        path={petPath}
         type="article"
-        keywords={`${pet.name}, ${pet.breed?.name || ''}, ${pet.category?.name || 'pet'} for sale, buy ${pet.breed?.name || 'pet'} India, My Duke`}
+        keywords={`${pet.name}, ${pet.breed || ''}, ${pet.category?.name || 'pet'} for sale, buy ${pet.breed || 'pet'} India, My Duke`}
         jsonLd={{
           '@context': 'https://schema.org',
           '@type': 'Product',
@@ -85,7 +90,7 @@ const PetDetail = () => {
                 priceCurrency: 'INR',
                 price: pet.price,
                 availability: 'https://schema.org/InStock',
-                url: `${SITE_URL}/pets/${pet._id || pet.id || id}`,
+                url: `${SITE_URL}${petPath}`,
               }
             : undefined,
         }}
@@ -96,7 +101,15 @@ const PetDetail = () => {
           <Breadcrumb
             items={[
               { label: 'All Pets', to: '/pets' },
-              { label: pet.category?.name || 'Pets', to: `/pets?category=${pet.category?.slug}` },
+              {
+                label: pet.category?.name || 'Pets',
+                to: pet.category?.slug
+                  ? `/pets/category/${pet.category.slug}`
+                  : `/pets?category=${pet.category?.slug}`,
+              },
+              ...(breedSlug
+                ? [{ label: pet.breed, to: `/pets/breed/${breedSlug}` }]
+                : []),
               { label: pet.name },
             ]}
           />

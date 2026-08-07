@@ -18,6 +18,7 @@ import sellRoutes from './routes/sellRoutes.js';
 import contactRoutes from './routes/contactRoutes.js';
 import breedRoutes from './routes/breedRoutes.js';
 import enquiryPromptRoutes from './routes/enquiryPromptRoutes.js';
+import { getSitemap } from './controllers/sitemapController.js';
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -145,6 +146,10 @@ app.use('/api/customer/auth/login', authLimiter);
 app.use('/api/customer/auth/register', authLimiter);
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+
+/** Dynamic XML sitemap (also mirrored onto the client domain at build time). */
+app.get('/sitemap.xml', getSitemap);
+app.get('/api/sitemap.xml', getSitemap);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Pets Marketplace API is running', timestamp: new Date().toISOString() });

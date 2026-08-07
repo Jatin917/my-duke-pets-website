@@ -26,7 +26,11 @@ const ImageGallery = ({ images = [], name, videoUrl = '', onWatchVideo }) => {
         {list[active] ? (
           <img
             src={resolveImageUrl(list[active])}
-            alt={`${name} ${active + 1}`}
+            alt={`${name} photo ${active + 1} — for sale on My Duke`}
+            loading={active === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+            width={900}
+            height={600}
             className="w-full h-full object-cover cursor-zoom-in"
             onClick={() => setZoomOpen(true)}
           />
@@ -69,7 +73,15 @@ const ImageGallery = ({ images = [], name, videoUrl = '', onWatchVideo }) => {
                 i === active ? 'border-primary-500' : 'border-transparent opacity-70 hover:opacity-100'
               }`}
             >
-              <img src={resolveImageUrl(img)} alt={`thumb-${i}`} className="w-full h-full object-cover" />
+              <img
+                src={resolveImageUrl(img)}
+                alt={`${name} thumbnail ${i + 1}`}
+                loading="lazy"
+                decoding="async"
+                width={80}
+                height={80}
+                className="w-full h-full object-cover"
+              />
             </button>
           ))}
         </div>
@@ -104,7 +116,9 @@ const ImageGallery = ({ images = [], name, videoUrl = '', onWatchVideo }) => {
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               src={resolveImageUrl(list[active])}
-              alt={name}
+              alt={`${name} — enlarged photo`}
+              loading="eager"
+              decoding="async"
               onClick={(e) => e.stopPropagation()}
               className="max-h-[85vh] max-w-full object-contain rounded-lg"
             />

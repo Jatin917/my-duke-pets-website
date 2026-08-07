@@ -107,7 +107,11 @@ const Testimonials = () => {
                 <div className="shrink-0 flex sm:flex-col items-center gap-3 sm:gap-4">
                   <img
                     src={current.avatar}
-                    alt={current.name}
+                    alt={`${current.name} — My Duke customer from ${current.location}`}
+                    loading="lazy"
+                    decoding="async"
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-2xl object-cover border-2 border-primary-200 shadow-sm"
                   />
                   <div className="flex gap-0.5 text-primary-500 sm:justify-center">

@@ -5,4 +5,7 @@ Disallow: /account
 Disallow: /login
 Disallow: /compare
 
+# Primary sitemap on the marketing domain (regenerated at build with all pet URLs)
 Sitemap: https://mydukepetsolution.com/sitemap.xml
+# API mirror (same content; useful if CDN caches the static file)
+Sitemap: https://api.mydukepetsolution.com/sitemap.xml

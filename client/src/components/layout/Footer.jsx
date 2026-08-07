@@ -71,11 +71,19 @@ const Footer = () => {
             <ul className="space-y-2 text-sm">
               {['Dogs', 'Cats', 'Birds', 'Rabbits'].map((c) => (
                 <li key={c}>
-                  <Link to={`/pets?category=${c.toLowerCase()}`} className="hover:text-primary-400 transition">
+                  <Link
+                    to={`/pets/category/${c.toLowerCase()}`}
+                    className="hover:text-primary-400 transition"
+                  >
                     {c}
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link to="/pets-in-gurugram" className="hover:text-primary-400 transition">
+                  Pets in Gurugram
+                </Link>
+              </li>
             </ul>
           </div>
 

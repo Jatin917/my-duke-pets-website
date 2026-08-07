@@ -10,14 +10,17 @@ const CategoryCard = ({ category, index = 0 }) => (
     transition={{ duration: 0.4, delay: index * 0.08 }}
   >
     <Link
-      to={`/pets?category=${category.slug}`}
+      to={`/pets/category/${category.slug}`}
       className="group relative block rounded-2xl overflow-hidden h-48 sm:h-56 shadow-soft hover:shadow-glow transition-shadow"
     >
       {category.image ? (
         <img
           src={resolveImageUrl(category.image)}
-          alt={category.name}
+          alt={`${category.name} for sale in India — My Duke`}
           loading="lazy"
+          decoding="async"
+          width={640}
+          height={360}
           className="absolute inset-0 w-full h-full object-cover will-change-transform"
           style={{
             animation: 'categoryKenBurns 8s ease-in-out infinite alternate',

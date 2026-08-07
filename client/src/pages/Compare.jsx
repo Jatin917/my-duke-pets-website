@@ -68,7 +68,7 @@ const Compare = () => {
 
   return (
     <>
-      <SEO title="Compare Pets" description="Compare pets side-by-side to make the best choice for your family." />
+      <SEO title="Compare Pets" description="Compare pets side-by-side to make the best choice for your family." noindex path="/compare" />
 
       <div className="bg-gray-50 min-h-screen pb-16">
         <div className="bg-white border-b border-gray-100 py-8">

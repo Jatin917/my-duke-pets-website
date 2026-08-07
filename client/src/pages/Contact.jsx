@@ -96,8 +96,10 @@ const Contact = () => {
   return (
     <>
       <SEO
-        title="Contact Us"
-        description={`Contact ${SITE_NAME} about a listing, rehoming a pet, or general support.`}
+        title="Contact Us — Gurugram Pet Shop"
+        description={`Contact ${SITE_NAME} in Gurugram (Sector 17C, Sukhrali) about a listing, rehoming a pet, or general support. Call or WhatsApp today.`}
+        path="/contact"
+        keywords={`contact ${SITE_NAME}, pet shop Gurgaon, pets Gurugram address, buy pets Delhi NCR`}
       />
 
       <section className="bg-gradient-hero pt-20 pb-14 sm:pt-28 sm:pb-20 text-white">

@@ -5,6 +5,10 @@ import {
   SITE_NAME,
   SITE_TAGLINE,
   SITE_URL,
+  SITE_ADDRESS,
+  PHONE_NUMBER,
+  FACEBOOK_URL,
+  INSTAGRAM_URL,
 } from '../../utils/constants';
 
 const toAbsoluteUrl = (path = '/') => {
@@ -42,10 +46,12 @@ const SEO = ({
       description: desc,
       contactPoint: {
         '@type': 'ContactPoint',
+        telephone: PHONE_NUMBER,
         contactType: 'customer support',
+        areaServed: 'IN',
         availableLanguage: ['English', 'Hindi'],
       },
-      sameAs: [],
+      sameAs: [INSTAGRAM_URL, FACEBOOK_URL].filter(Boolean),
     },
     {
       '@context': 'https://schema.org',
@@ -65,12 +71,38 @@ const SEO = ({
       name: SITE_NAME,
       url: SITE_URL,
       description: desc,
-      areaServed: {
-        '@type': 'Country',
-        name: 'India',
-      },
+      image: toAbsoluteUrl('/logo.png'),
+      telephone: PHONE_NUMBER,
       priceRange: '₹₹',
       keywords: kw,
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: SITE_ADDRESS,
+        addressLocality: 'Gurugram',
+        addressRegion: 'Haryana',
+        postalCode: '122001',
+        addressCountry: 'IN',
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: 28.4229,
+        longitude: 77.0365,
+      },
+      openingHoursSpecification: [
+        {
+          '@type': 'OpeningHoursSpecification',
+          dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+          opens: '09:00',
+          closes: '19:00',
+        },
+      ],
+      areaServed: [
+        { '@type': 'City', name: 'Gurugram' },
+        { '@type': 'City', name: 'Gurgaon' },
+        { '@type': 'AdministrativeArea', name: 'Delhi NCR' },
+        { '@type': 'Country', name: 'India' },
+      ],
+      sameAs: [INSTAGRAM_URL, FACEBOOK_URL].filter(Boolean),
     },
   ];
 
@@ -91,8 +123,14 @@ const SEO = ({
         content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1'}
       />
       <meta name="author" content={SITE_NAME} />
-      <meta name="geo.region" content="IN" />
-      <meta name="geo.placename" content="India" />
+      <meta name="geo.region" content="IN-HR" />
+      <meta name="geo.placename" content="Gurugram" />
+      {import.meta.env.VITE_GOOGLE_SITE_VERIFICATION ? (
+        <meta
+          name="google-site-verification"
+          content={import.meta.env.VITE_GOOGLE_SITE_VERIFICATION}
+        />
+      ) : null}
       <link rel="canonical" href={canonical} />
 
       <meta property="og:site_name" content={SITE_NAME} />
