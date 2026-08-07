@@ -62,17 +62,17 @@ const BreedLanding = () => {
   const title = `Buy ${breedName} in India`;
   const description =
     sample?.seoDescription ||
-    `Buy ${breedName} pets in India on ${SITE_NAME}. Verified listings with photos, care tips, and support from Gurugram / Delhi-NCR.`;
+    `Buy ${breedName} pets in India on ${SITE_NAME}. Verified listings with photos, care tips, and support from our team.`;
 
   const paragraphs = [
     `Looking to buy a ${breedName} in India? ${SITE_NAME} lists verified ${breedName} companions with clear photos, pricing, and health details so you can enquire with confidence.`,
     sample?.temperament
       ? `Temperament: ${sample.temperament}. ${sample.description ? String(sample.description).slice(0, 280) : ''}`
-      : `${breedName} pets are popular with Indian families. Browse live listings below or contact us for current availability in Gurugram and pan-India delivery options.`,
+      : `${breedName} pets are popular with Indian families. Browse live listings below or contact us for current availability and delivery options.`,
     minPrice != null
       ? `Typical listed prices for ${breedName} on ${SITE_NAME} currently range from ₹${minPrice.toLocaleString('en-IN')} to ₹${maxPrice.toLocaleString('en-IN')}. Final price depends on age, lineage, and vaccination status.`
       : `Contact ${SITE_NAME} for current ${breedName} pricing and vaccination status.`,
-    `We are based at ${SITE_ADDRESS}. Visit our shop, message on WhatsApp, or use the enquiry form on any listing. Prefer local search? See pets available in Gurugram.`,
+    `We are based at ${SITE_ADDRESS}. Visit our shop, message on WhatsApp, or use the enquiry form on any listing.`,
   ].filter(Boolean);
 
   const faqs = sample?.faqs?.length
@@ -179,10 +179,6 @@ const BreedLanding = () => {
 
             <p className="text-sm text-gray-500 pt-2">
               Related:{' '}
-              <Link to="/pets-in-gurugram" className="text-primary-600 hover:underline">
-                Pets in Gurugram
-              </Link>
-              {' · '}
               <Link to="/contact" className="text-primary-600 hover:underline">
                 Contact us
               </Link>

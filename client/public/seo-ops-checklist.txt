@@ -1,25 +1,39 @@
-My Duke — Google Business Profile / Search Console checklist
-============================================================
+Simple guide — what YOU need to do outside the website code
+===========================================================
 
-NAP (keep identical everywhere)
-- Name: My Duke
-- Address: Sukhrali near Mata wali Gali, Sector 17C, Gurugram, Haryana
-- Phone: use the same number as VITE_PHONE_NUMBER / site footer
-- Website: https://mydukepetsolution.com
-- Category: Pet store (or Pet breeder if more accurate)
+This file is NOT a website page. It is a to-do list for Google tools.
+Your shop address and phone on Contact / Footer are already enough for visitors.
 
-Google Search Console
-1. Add property: https://mydukepetsolution.com
-2. Verify via HTML tag: set VITE_GOOGLE_SITE_VERIFICATION in client/.env then rebuild
-   OR upload the HTML file Google gives you into client/public/
-3. Submit sitemaps:
-   - https://mydukepetsolution.com/sitemap.xml
-   - https://api.mydukepetsolution.com/sitemap.xml
-4. Request indexing for /, /pets, /pets-in-gurugram, /contact, and top pet URLs
-5. Prefer one host (apex without www) and redirect the other
 
-Google Business Profile
-1. Create/claim listing at business.google.com for the Gurugram address
-2. Add photos of shop + pets weekly
-3. Ask buyers for reviews
-4. Link Instagram/Facebook same as the website footer
+1) Keep your business details the SAME everywhere
+   Name:    My Duke
+   Address: Sukhrali near Mata wali Gali, Sector 17C, Gurugram, Haryana
+   Phone:   same number as on your website
+   Website: https://mydukepetsolution.com
+
+   Why: Google trusts you more when the name/address/phone match on
+   website, Google Maps, WhatsApp, and directories.
+
+
+2) Google Search Console (tells Google “this is my site — please index it”)
+   a. Open: https://search.google.com/search-console
+   b. Add your site: https://mydukepetsolution.com
+   c. Prove you own it (Google will show one method):
+      - HTML tag: put the code Google gives into client/.env as
+        VITE_GOOGLE_SITE_VERIFICATION=... then rebuild/redeploy
+      - OR download Google’s small HTML file and put it in client/public/
+   d. After verification, open Sitemaps and submit:
+      https://mydukepetsolution.com/sitemap.xml
+   e. Optionally ask Google to index Home, /pets, /contact
+
+   Why: Without this, Google may take longer to find your pages.
+
+
+3) Google Business Profile (makes you show on Google Maps / “near me”)
+   a. Open: https://business.google.com
+   b. Create a listing for My Duke at your Gurugram address
+   c. Choose category like “Pet store”
+   d. Add photos of shop/pets, ask customers for reviews
+
+   Why: People searching “pet shop near me” or “pets Gurgaon” often
+   see Maps results first — this is separate from your website pages.

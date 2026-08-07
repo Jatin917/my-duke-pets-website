@@ -79,11 +79,6 @@ const Footer = () => {
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link to="/pets-in-gurugram" className="hover:text-primary-400 transition">
-                  Pets in Gurugram
-                </Link>
-              </li>
             </ul>
           </div>
 

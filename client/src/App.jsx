@@ -7,7 +7,6 @@ import Pets from './pages/Pets';
 import PetDetail from './pages/PetDetail';
 import CategoryHub from './pages/CategoryHub';
 import BreedLanding from './pages/BreedLanding';
-import PetsInGurugram from './pages/PetsInGurugram';
 import Compare from './pages/Compare';
 import About from './pages/About';
 import Contact from './pages/Contact';
@@ -48,7 +47,6 @@ function App() {
           <Route path="/pets/category/:slug" element={<CategoryHub />} />
           <Route path="/pets/breed/:slug" element={<BreedLanding />} />
           <Route path="/pets/:id" element={<PetDetail />} />
-          <Route path="/pets-in-gurugram" element={<PetsInGurugram />} />
           <Route path="/compare" element={<Compare />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />

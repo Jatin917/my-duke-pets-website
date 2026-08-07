@@ -3,7 +3,14 @@ import Pet from '../models/Pet.js';
 import Category from '../models/Category.js';
 import Breed from '../models/Breed.js';
 
-const SITE_URL = (process.env.CLIENT_URL || 'https://mydukepetsolution.com').replace(/\/$/, '');
+/** Always absolute https URLs — Google rejects <loc> without a protocol. */
+const normalizeSiteUrl = (raw) => {
+  let u = String(raw || 'https://mydukepetsolution.com').trim().replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+};
+
+const SITE_URL = normalizeSiteUrl(process.env.CLIENT_URL);
 
 const escapeXml = (value = '') =>
   String(value)
@@ -50,7 +57,6 @@ export const getSitemap = asyncHandler(async (req, res) => {
   const staticPages = [
     { path: '/', changefreq: 'daily', priority: '1.0' },
     { path: '/pets', changefreq: 'daily', priority: '0.9' },
-    { path: '/pets-in-gurugram', changefreq: 'weekly', priority: '0.85' },
     { path: '/sell', changefreq: 'weekly', priority: '0.8' },
     { path: '/about', changefreq: 'monthly', priority: '0.7' },
     { path: '/help', changefreq: 'monthly', priority: '0.7' },

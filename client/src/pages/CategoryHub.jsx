@@ -76,9 +76,9 @@ const CategoryHub = () => {
             <h1 className="font-display text-3xl font-bold text-gray-800 mt-3">{name} for Sale</h1>
             <p className="text-gray-500 mt-2 max-w-3xl">{description}</p>
             <p className="text-sm text-gray-400 mt-3">
-              Looking locally? See{' '}
-              <Link to="/pets-in-gurugram" className="text-primary-600 font-medium hover:underline">
-                pets in Gurugram / Delhi-NCR
+              Need help choosing?{' '}
+              <Link to="/contact" className="text-primary-600 font-medium hover:underline">
+                Contact us
               </Link>
               .
             </p>

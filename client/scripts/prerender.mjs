@@ -10,8 +10,17 @@ import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.join(__dirname, '..', 'dist');
-const SITE_URL = (process.env.VITE_SITE_URL || 'https://mydukepetsolution.com').replace(/\/$/, '');
-const API = (process.env.VITE_API_URL || 'https://api.mydukepetsolution.com/api').replace(/\/$/, '');
+const normalizeSiteUrl = (raw) => {
+  let u = String(raw || 'https://mydukepetsolution.com').trim().replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+};
+const SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL);
+const API = (() => {
+  let u = String(process.env.VITE_API_URL || 'https://api.mydukepetsolution.com/api').trim().replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+})();
 const SITE_NAME = 'My Duke';
 
 const escapeHtml = (s = '') =>
@@ -59,13 +68,6 @@ const STATIC_ROUTES = [
     title: `Help & Support | ${SITE_NAME}`,
     description: 'FAQs and support for buying or selling pets on My Duke.',
     h1: 'Help & Support',
-  },
-  {
-    route: '/pets-in-gurugram',
-    title: `Pets for Sale in Gurugram & Delhi-NCR | ${SITE_NAME}`,
-    description:
-      'Buy verified dogs, cats, birds and more in Gurugram / Gurgaon and Delhi-NCR. Visit My Duke at Sector 17C, Sukhrali.',
-    h1: 'Pets for Sale in Gurugram',
   },
 ];
 
@@ -214,7 +216,6 @@ async function main() {
     '/pets/category/*  /pets/category/:splat/index.html  200',
     '/pets/breed/*     /pets/breed/:splat/index.html  200',
     '/pets/*           /pets/:splat/index.html  200',
-    '/pets-in-gurugram /pets-in-gurugram/index.html  200',
     '/about            /about/index.html  200',
     '/contact          /contact/index.html  200',
     '/sell             /sell/index.html  200',

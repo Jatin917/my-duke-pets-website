@@ -9,14 +9,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const SITE_URL = (process.env.VITE_SITE_URL || process.env.CLIENT_URL || 'https://mydukepetsolution.com').replace(
-  /\/$/,
-  ''
-);
-const API = (process.env.VITE_API_URL || process.env.PROD_API_URL || 'https://api.mydukepetsolution.com/api').replace(
-  /\/$/,
-  ''
-);
+
+/** Always absolute https URLs — Google rejects loc without protocol. */
+const normalizeSiteUrl = (raw) => {
+  let u = String(raw || 'https://mydukepetsolution.com').trim().replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+};
+
+const SITE_URL = normalizeSiteUrl(process.env.VITE_SITE_URL || process.env.CLIENT_URL);
+const API = (() => {
+  let u = String(
+    process.env.VITE_API_URL || process.env.PROD_API_URL || 'https://api.mydukepetsolution.com/api'
+  )
+    .trim()
+    .replace(/\/$/, '');
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  return u;
+})();
 const outPath = path.join(__dirname, '..', 'public', 'sitemap.xml');
 
 const escapeXml = (value = '') =>
@@ -91,7 +101,6 @@ async function main() {
   const staticPages = [
     { path: '/', changefreq: 'daily', priority: '1.0' },
     { path: '/pets', changefreq: 'daily', priority: '0.9' },
-    { path: '/pets-in-gurugram', changefreq: 'weekly', priority: '0.85' },
     { path: '/sell', changefreq: 'weekly', priority: '0.8' },
     { path: '/about', changefreq: 'monthly', priority: '0.7' },
     { path: '/help', changefreq: 'monthly', priority: '0.7' },

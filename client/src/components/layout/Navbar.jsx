@@ -12,7 +12,6 @@ import logoFull from '../../assets/logo-full.png';
 const navLinks = [
   { to: '/', label: 'Home' },
   { to: '/pets', label: 'All Pets' },
-  { to: '/pets-in-gurugram', label: 'Gurugram' },
   { to: '/sell', label: 'Sell' },
   { to: '/donate', label: 'Donate' },
   { to: '/contact', label: 'Contact' },
